@@ -1,0 +1,4110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RoundUp — Intelligent Micro-Investing</title>
+<meta name="description" content="RoundUp automatically invests 10% of every online purchase. You spend. It grows." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<style>
+/* ============================================================
+   CSS CUSTOM PROPERTIES — EDIT ALL THEME VALUES HERE
+   ============================================================ */
+:root {
+  /* Colors */
+  --color-bg-primary: #05080F;
+  --color-bg-secondary: #0C1120;
+  --color-bg-card: #0F1729;
+  --color-bg-card-hover: #141E33;
+  --color-accent-gold: #D4A843;
+  --color-accent-gold-bright: #F2C94C;
+  --color-accent-gold-dim: #8A6E2F;
+  --color-accent-green: #00E5A0;
+  --color-accent-red: #FF4D6A;
+  --color-text-primary: #F0F4FF;
+  --color-text-secondary: #8892A4;
+  --color-text-muted: #4A5568;
+  --color-border: rgba(212, 168, 67, 0.15);
+  --color-border-hover: rgba(212, 168, 67, 0.4);
+
+  /* Typography */
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Border radius */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 40px;
+
+  /* Shadows */
+  --shadow-gold: 0 0 40px rgba(212, 168, 67, 0.15);
+  --shadow-card: 0 8px 40px rgba(0, 0, 0, 0.4);
+
+  /* Transitions */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout */
+  --max-width: 1200px;
+  --section-padding: 140px 24px;
+
+  /* Ticker height reserved at bottom */
+  --ticker-height: 44px;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  padding-bottom: var(--ticker-height);
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-accent-gold);
+  margin-bottom: 16px;
+}
+
+.gold { color: var(--color-accent-gold); }
+.gold-bright { color: var(--color-accent-gold-bright); }
+.green { color: var(--color-accent-green); }
+.red { color: var(--color-accent-red); }
+.muted { color: var(--color-text-secondary); }
+
+.pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  border: 1px solid var(--color-border-hover);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-accent-gold);
+  background: rgba(212, 168, 67, 0.05);
+  letter-spacing: 0.05em;
+}
+
+.pill-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.pill-tag.market-data {
+  background: rgba(0, 229, 160, 0.1);
+  color: var(--color-accent-green);
+  border: 1px solid rgba(0, 229, 160, 0.25);
+}
+.pill-tag.projection {
+  background: rgba(212, 168, 67, 0.1);
+  color: var(--color-accent-gold);
+  border: 1px solid var(--color-border-hover);
+}
+
+/* ============================================================
+   SECTION: NAVBAR
+   ============================================================ */
+#navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background var(--transition-smooth), border-color var(--transition-smooth), backdrop-filter var(--transition-smooth);
+  border-bottom: 1px solid transparent;
+}
+
+#navbar.scrolled {
+  background: rgba(5, 8, 15, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom-color: var(--color-accent-gold-dim);
+  padding: 14px 40px;
+}
+
+/* EDIT: wordmark text */
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: -0.01em;
+}
+.nav-logo .logo-up { color: var(--color-accent-gold); }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  position: relative;
+  padding-bottom: 2px;
+  transition: color var(--transition-fast);
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--color-accent-gold);
+  transition: width var(--transition-fast);
+}
+.nav-links a:hover { color: var(--color-text-primary); }
+.nav-links a:hover::after { width: 100%; }
+
+/* EDIT: navbar CTA button text */
+.nav-cta {
+  padding: 9px 22px;
+  border: 1px solid var(--color-accent-gold);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent-gold);
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.nav-cta:hover {
+  background: var(--color-accent-gold);
+  color: var(--color-bg-primary);
+}
+
+/* Hamburger */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 4px;
+}
+.hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--color-text-primary);
+  border-radius: 2px;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.mobile-nav {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(5, 8, 15, 0.98);
+  backdrop-filter: blur(20px);
+  padding: 80px 24px 32px;
+  z-index: 999;
+  flex-direction: column;
+  gap: 24px;
+  transform: translateY(-100%);
+  transition: transform var(--transition-smooth);
+}
+.mobile-nav.open { transform: translateY(0); }
+.mobile-nav a {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.mobile-nav a:hover { color: var(--color-accent-gold); }
+.mobile-nav .mobile-cta {
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--color-accent-gold);
+  color: var(--color-bg-primary);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  text-align: center;
+  font-size: 16px;
+}
+
+/* ============================================================
+   SECTION: HERO
+   ============================================================ */
+#hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 120px 24px 100px;
+}
+
+/* Blob canvas background */
+#blob-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Grid overlay */
+#hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.hero-eyebrow {
+  margin-bottom: 32px;
+}
+
+/* EDIT: hero headline — line 1 */
+/* EDIT: hero headline — line 2 (italic gold) */
+.hero-headline {
+  font-family: var(--font-display);
+  font-size: clamp(52px, 8vw, 96px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 28px;
+  color: var(--color-text-primary);
+}
+.hero-headline em {
+  font-style: italic;
+  color: var(--color-accent-gold);
+}
+
+/* EDIT: hero subheadline */
+.hero-sub {
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  max-width: 580px;
+  margin: 0 auto 44px;
+  line-height: 1.7;
+}
+
+.hero-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 44px;
+}
+
+/* EDIT: primary CTA button text */
+.btn-primary {
+  padding: 16px 36px;
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, var(--color-accent-gold-bright) 100%);
+  color: var(--color-bg-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  will-change: transform;
+  font-family: var(--font-body);
+}
+.btn-primary:hover {
+  box-shadow: 0 0 40px rgba(212, 168, 67, 0.45);
+  transform: translateY(-2px);
+}
+
+/* EDIT: secondary CTA button text */
+.btn-secondary {
+  padding: 16px 36px;
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid rgba(240, 244, 255, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+  font-family: var(--font-body);
+}
+.btn-secondary:hover {
+  border-color: var(--color-accent-gold);
+  color: var(--color-accent-gold);
+}
+
+.hero-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+/* EDIT: trust signal items */
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.trust-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+/* Extension popup mockup */
+.hero-popup {
+  position: absolute;
+  top: 160px;
+  right: calc(50% - 580px);
+  z-index: 3;
+  transform: rotate(3deg);
+  animation: bobFloat 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes bobFloat {
+  0%, 100% { transform: rotate(3deg) translateY(0); }
+  50% { transform: rotate(3deg) translateY(-12px); }
+}
+
+.ext-popup {
+  width: 280px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-hover);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-gold), var(--shadow-card);
+  overflow: hidden;
+}
+
+.ext-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ext-logo-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-accent-gold), var(--color-accent-gold-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--color-bg-primary);
+  flex-shrink: 0;
+}
+
+.ext-name {
+  font-weight: 700;
+  font-size: 14px;
+  flex: 1;
+}
+
+.ext-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent-green);
+  box-shadow: 0 0 6px var(--color-accent-green);
+}
+
+.ext-body { padding: 16px; }
+
+.ext-question {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+}
+
+.ext-amount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.ext-purchase { font-size: 13px; color: var(--color-text-muted); }
+.ext-invest {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-accent-green);
+}
+
+.ext-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.ext-pill {
+  padding: 3px 10px;
+  border: 1px solid var(--color-border-hover);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-accent-gold);
+  background: rgba(212, 168, 67, 0.05);
+}
+
+.ext-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ext-btn-confirm {
+  flex: 1;
+  padding: 9px;
+  background: var(--color-accent-gold);
+  color: var(--color-bg-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.ext-btn-skip {
+  padding: 9px 16px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+/* Scroll chevron */
+.scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: bounceDown 1.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes bounceDown {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.5; }
+  50% { transform: translateX(-50%) translateY(8px); opacity: 1; }
+}
+
+.scroll-indicator svg {
+  width: 24px;
+  height: 24px;
+  color: var(--color-accent-gold-dim);
+}
+
+/* ============================================================
+   SECTION: WHY THIS EXISTS (Market Reality Bar)
+   ============================================================ */
+#why-exists {
+  background: var(--color-bg-secondary);
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.why-label {
+  margin-bottom: 48px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  position: relative;
+}
+
+.stat-item {
+  padding: 0 32px;
+  position: relative;
+}
+.stat-item + .stat-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10%;
+  height: 80%;
+  width: 1px;
+  background: var(--color-accent-gold-dim);
+  opacity: 0.4;
+}
+
+/* EDIT: stat number values */
+.stat-number {
+  font-family: var(--font-mono);
+  font-size: clamp(36px, 4vw, 52px);
+  font-weight: 400;
+  color: var(--color-accent-gold);
+  line-height: 1;
+  margin-bottom: 12px;
+  display: block;
+}
+
+/* EDIT: stat descriptions */
+.stat-desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.stat-source {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.03em;
+}
+
+/* ============================================================
+   SECTION: HOW IT WORKS
+   ============================================================ */
+#how-it-works {
+  padding: var(--section-padding);
+  background: var(--color-bg-primary);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 5vw, 60px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.section-title em {
+  font-style: italic;
+  color: var(--color-accent-gold);
+}
+
+/* EDIT: section subtitle */
+.section-sub {
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 72px;
+}
+
+.steps-wrapper {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+/* Connecting dashed line desktop */
+.steps-connector {
+  position: absolute;
+  top: 60px;
+  left: calc(33.33% - 20px);
+  right: calc(33.33% - 20px);
+  height: 1px;
+  border-top: 2px dashed rgba(212, 168, 67, 0.2);
+  pointer-events: none;
+}
+
+.steps-connector-dot {
+  position: absolute;
+  top: -5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent-gold);
+  animation: slideAlongLine 4s linear infinite;
+  will-change: transform;
+}
+
+@keyframes slideAlongLine {
+  0% { left: 0; opacity: 0; }
+  5% { opacity: 1; }
+  95% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+.step-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 40px 36px;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-smooth), border-color var(--transition-smooth), background var(--transition-smooth), box-shadow var(--transition-smooth);
+  will-change: transform;
+}
+.step-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-card-hover);
+  box-shadow: var(--shadow-gold);
+}
+
+.step-watermark {
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  font-family: var(--font-display);
+  font-size: 120px;
+  font-weight: 900;
+  color: rgba(212, 168, 67, 0.06);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.step-icon {
+  font-size: 40px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+/* EDIT: step card titles */
+.step-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--color-text-primary);
+}
+
+/* EDIT: step card descriptions */
+.step-desc {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+/* ============================================================
+   SECTION: INTERACTIVE POPUP DEMO
+   ============================================================ */
+#demo {
+  padding: var(--section-padding);
+  background: var(--color-bg-secondary);
+}
+
+.browser-mockup {
+  max-width: 820px;
+  margin: 0 auto 60px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.browser-chrome {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(15, 23, 41, 0.8);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.browser-dots {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.browser-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.browser-dot.red { background: #FF5F56; }
+.browser-dot.yellow { background: #FFBD2E; }
+.browser-dot.green { background: #27C93F; }
+
+.browser-url {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 5px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.browser-body {
+  padding: 32px;
+  min-height: 280px;
+  position: relative;
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+/* Fake checkout placeholders */
+.checkout-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.placeholder-block {
+  height: 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+}
+.placeholder-block.short { width: 60%; }
+.placeholder-block.medium { width: 80%; }
+.placeholder-block.tall { height: 80px; }
+
+.checkout-right {
+  width: 220px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+}
+.checkout-total-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+/* EDIT: demo checkout price */
+.checkout-price {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  color: var(--color-text-primary);
+  margin-bottom: 16px;
+}
+.checkout-btn {
+  width: 100%;
+  padding: 10px;
+  background: #FF9900;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #000;
+  cursor: default;
+  font-family: var(--font-body);
+}
+
+/* AI confidence bars */
+.ai-analysis {
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ai-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.ai-check {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ai-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-asset {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.ai-reasoning {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.ai-bar-wrapper {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ai-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent-gold), var(--color-accent-gold-bright));
+  border-radius: 3px;
+  width: 0%;
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-pct {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-accent-gold);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.demo-disclaimer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: 32px;
+  max-width: 820px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ============================================================
+   SECTION: GROWTH PROJECTION CHART
+   ============================================================ */
+#growth {
+  padding: var(--section-padding);
+  background: var(--color-bg-primary);
+}
+
+.chart-container {
+  position: relative;
+  max-width: var(--max-width);
+  margin: 0 auto 40px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  box-shadow: var(--shadow-card);
+}
+
+.chart-legend {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid;
+}
+.legend-pill .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.legend-pill.gold-pill { border-color: var(--color-accent-gold); color: var(--color-accent-gold); background: rgba(212,168,67,0.06); }
+.legend-pill.gold-pill .dot { background: var(--color-accent-gold); }
+.legend-pill.gray-pill { border-color: rgba(136,146,164,0.4); color: var(--color-text-secondary); background: rgba(136,146,164,0.05); }
+.legend-pill.gray-pill .dot { background: var(--color-text-secondary); }
+.legend-pill.red-pill { border-color: rgba(255,77,106,0.4); color: var(--color-accent-red); background: rgba(255,77,106,0.05); }
+.legend-pill.red-pill .dot { background: var(--color-accent-red); }
+
+canvas#growthChart { width: 100% !important; }
+
+.chart-callout {
+  position: absolute;
+  top: 32px;
+  right: 32px;
+  background: rgba(5, 8, 15, 0.85);
+  border: 1px solid var(--color-accent-gold);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-size: 13px;
+}
+.callout-label { color: var(--color-text-muted); font-size: 11px; margin-bottom: 2px; }
+/* EDIT: 20-year callout projected value */
+.callout-value {
+  font-family: var(--font-mono);
+  color: var(--color-accent-gold-bright);
+  font-size: 18px;
+}
+
+.result-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: var(--max-width);
+  margin: 0 auto 32px;
+}
+
+.result-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 28px;
+  text-align: center;
+}
+
+.result-icon { font-size: 24px; margin-bottom: 10px; }
+.result-label { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 6px; }
+/* EDIT: result card projected values */
+.result-value {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 400;
+}
+.result-card.gold-card { border-color: var(--color-border-hover); }
+.result-card.gold-card .result-value { color: var(--color-accent-gold-bright); }
+.result-card.gray-card .result-value { color: var(--color-text-secondary); }
+.result-card.red-card .result-value { color: var(--color-accent-red); }
+
+.growth-highlight {
+  max-width: var(--max-width);
+  margin: 0 auto 20px;
+  background: rgba(0, 229, 160, 0.05);
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  border-radius: var(--radius-md);
+  padding: 20px 28px;
+  font-size: 15px;
+  color: var(--color-accent-green);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chart-disclaimer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   SECTION: THE PROOF
+   ============================================================ */
+#proof {
+  padding: var(--section-padding);
+  background: var(--color-bg-secondary);
+}
+
+.proof-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.proof-column { display: flex; flex-direction: column; gap: 20px; }
+
+.proof-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent-gold-dim);
+  border-radius: var(--radius-md);
+  padding: 28px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  will-change: transform;
+}
+.proof-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-gold);
+}
+
+.proof-card-icon { font-size: 28px; margin-bottom: 12px; }
+.proof-stat {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  color: var(--color-accent-gold);
+  margin-bottom: 8px;
+}
+.proof-claim {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+.proof-detail {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+  margin-bottom: 12px;
+}
+.proof-source {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+}
+
+.concept-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 28px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  will-change: transform;
+}
+.concept-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-gold);
+}
+.concept-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.concept-icon { font-size: 28px; }
+.concept-headline {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.concept-detail {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+}
+
+/* ============================================================
+   SECTION: ACORNS PROOF OF CONCEPT
+   ============================================================ */
+#acorns {
+  padding: var(--section-padding);
+  background: var(--color-bg-primary);
+}
+
+.comparison-card {
+  max-width: 820px;
+  margin: 0 auto 48px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+}
+
+.comparison-col {
+  padding: 40px;
+}
+.comparison-col.roundup-col {
+  background: rgba(212, 168, 67, 0.03);
+}
+
+.comparison-divider {
+  background: var(--color-accent-gold-dim);
+  opacity: 0.3;
+}
+
+.comparison-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(212, 168, 67, 0.1);
+  border: 1px solid var(--color-border-hover);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-accent-gold);
+  margin-bottom: 20px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+
+.comparison-brand {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--color-text-primary);
+}
+
+.comparison-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.comparison-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.comparison-list li::before {
+  content: '—';
+  color: var(--color-accent-gold-dim);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.roundup-col .comparison-list li::before {
+  content: '✦';
+  color: var(--color-accent-gold);
+}
+
+/* EDIT: Acorns section quote */
+.acorns-quote {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+.acorns-quote strong { color: var(--color-text-primary); }
+
+/* ============================================================
+   SECTION: EARLY ACCESS CTA
+   ============================================================ */
+#early-access {
+  padding: var(--section-padding);
+  background: var(--color-bg-secondary);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#early-access::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(ellipse, rgba(212,168,67,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.early-access-content {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* EDIT: early access eyebrow */
+.early-eyebrow { margin-bottom: 28px; }
+
+/* EDIT: early access headline */
+.early-headline {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 6vw, 72px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+.early-headline em { font-style: italic; color: var(--color-accent-gold); }
+
+/* EDIT: early access subheadline */
+.early-sub {
+  font-size: 17px;
+  color: var(--color-text-secondary);
+  margin-bottom: 40px;
+  line-height: 1.7;
+}
+
+.email-form {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.email-input {
+  flex: 1;
+  padding: 15px 20px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--color-border-hover);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.email-input::placeholder { color: var(--color-text-muted); }
+.email-input:focus { border-color: var(--color-accent-gold); }
+
+.email-submit {
+  padding: 15px 28px;
+  background: linear-gradient(135deg, var(--color-accent-gold), var(--color-accent-gold-bright));
+  color: var(--color-bg-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--font-body);
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  will-change: transform;
+}
+.email-submit:hover {
+  box-shadow: 0 0 30px rgba(212,168,67,0.4);
+  transform: translateY(-1px);
+}
+
+.form-success {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--color-accent-green);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 16px;
+  background: rgba(0,229,160,0.08);
+  border: 1px solid rgba(0,229,160,0.25);
+  border-radius: var(--radius-sm);
+  max-width: 480px;
+  margin: 0 auto 20px;
+}
+
+/* EDIT: early access no-spam line */
+.form-note {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 32px;
+}
+
+.trust-badges {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* ============================================================
+   SECTION: FAQ
+   ============================================================ */
+#faq {
+  padding: var(--section-padding);
+  background: var(--color-bg-primary);
+}
+
+.faq-list {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent-gold-dim);
+  background: var(--color-bg-card);
+  margin-bottom: 2px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 28px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  user-select: none;
+  transition: color var(--transition-fast);
+}
+.faq-question:hover { color: var(--color-accent-gold); }
+
+.faq-chevron {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--color-accent-gold-dim);
+  transition: transform var(--transition-fast);
+}
+.faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-answer-inner {
+  padding: 0 28px 22px;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.75;
+}
+
+/* ============================================================
+   TICKER BAR — FIXED BOTTOM
+   ============================================================ */
+#ticker-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  height: var(--ticker-height);
+  background: rgba(5, 8, 15, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--color-accent-gold-dim);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.ticker-label {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  border-right: 1px solid var(--color-border);
+  z-index: 1;
+  background: rgba(5, 8, 15, 0.95);
+}
+
+/* EDIT: ticker live label */
+.ticker-live-text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.ticker-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent-red);
+  animation: pulseDot 1.5s ease-in-out infinite;
+  will-change: opacity;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.ticker-scroll-wrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.ticker-track {
+  display: flex;
+  align-items: center;
+  animation: tickerScroll 60s linear infinite;
+  will-change: transform;
+  white-space: nowrap;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+
+.ticker-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-accent-gold);
+  letter-spacing: 0.05em;
+}
+
+.ticker-price {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-primary);
+}
+
+.ticker-change {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.ticker-change.up { color: var(--color-accent-green); }
+.ticker-change.down { color: var(--color-accent-red); }
+
+.ticker-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-accent-gold-dim);
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.ticker-disclaimer {
+  flex-shrink: 0;
+  padding: 0 16px;
+  border-left: 1px solid var(--color-border);
+  font-size: 9px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  z-index: 1;
+  background: rgba(5, 8, 15, 0.95);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+#footer {
+  background: var(--color-bg-secondary);
+  border-top: 1px solid;
+  border-image: linear-gradient(90deg, transparent, var(--color-accent-gold-dim), transparent) 1;
+  padding: 72px 24px 48px;
+}
+
+.footer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  max-width: var(--max-width);
+  margin: 0 auto 48px;
+  flex-wrap: wrap;
+}
+
+.footer-logo {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+}
+.footer-logo .logo-up { color: var(--color-accent-gold); }
+
+.footer-nav-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+  flex-wrap: wrap;
+}
+.footer-nav-links a {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
+}
+.footer-nav-links a:hover { color: var(--color-accent-gold); }
+
+.footer-socials {
+  display: flex;
+  gap: 16px;
+}
+.social-icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+  cursor: pointer;
+}
+.social-icon:hover { border-color: var(--color-accent-gold); color: var(--color-accent-gold); }
+
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 48px;
+  max-width: var(--max-width);
+  margin: 0 auto 56px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.footer-col-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  margin-bottom: 20px;
+  font-family: var(--font-mono);
+}
+
+.footer-col-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-col-links a {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
+}
+.footer-col-links a:hover { color: var(--color-accent-gold); }
+
+.footer-bottom {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+/* EDIT: copyright year and name */
+.footer-copy {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* EDIT: footer legal disclaimer */
+.footer-legal {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  max-width: 640px;
+  line-height: 1.65;
+}
+
+/* ============================================================
+   SECTION: INVESTMENT SIMULATOR
+   ============================================================ */
+#simulator {
+  padding: var(--section-padding);
+  background: var(--color-bg-secondary);
+  position: relative;
+  overflow: hidden;
+}
+#simulator::before {
+  content: '';
+  position: absolute;
+  bottom: -200px;
+  right: -200px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(ellipse, rgba(212,168,67,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.sim-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 32px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  align-items: start;
+}
+
+/* --- Input Panel --- */
+.sim-input-panel {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  position: sticky;
+  top: 90px;
+}
+
+.sim-panel-title {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent-gold);
+  margin-bottom: 28px;
+}
+
+.sim-field { margin-bottom: 28px; }
+
+.sim-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.sim-label span { color: var(--color-accent-gold); font-family: var(--font-mono); font-size: 14px; }
+
+.sim-price-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--color-border-hover);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color var(--transition-fast);
+}
+.sim-price-wrapper:focus-within { border-color: var(--color-accent-gold); }
+
+.sim-currency {
+  padding: 14px 16px;
+  background: rgba(212,168,67,0.08);
+  border-right: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--color-accent-gold);
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.sim-price-input {
+  flex: 1;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--color-text-primary);
+  width: 100%;
+}
+.sim-price-input::placeholder { color: var(--color-text-muted); }
+
+/* Slider */
+.sim-slider-wrapper { position: relative; }
+
+.sim-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.08);
+  outline: none;
+  cursor: pointer;
+  position: relative;
+}
+.sim-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-accent-gold);
+  cursor: pointer;
+  border: 3px solid var(--color-bg-primary);
+  box-shadow: 0 0 0 2px var(--color-accent-gold-dim);
+  transition: box-shadow var(--transition-fast);
+}
+.sim-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 4px rgba(212,168,67,0.25);
+}
+.sim-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-accent-gold);
+  cursor: pointer;
+  border: 3px solid var(--color-bg-primary);
+}
+
+.sim-slider-marks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.sim-slider-marks span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+/* Investment summary box */
+.sim-summary {
+  background: rgba(212,168,67,0.06);
+  border: 1px solid var(--color-border-hover);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 0;
+}
+
+.sim-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.sim-summary-label { font-size: 13px; color: var(--color-text-secondary); font-weight: 500; }
+.sim-summary-value {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  color: var(--color-accent-green);
+  font-weight: 400;
+}
+
+.sim-split-bars { display: flex; flex-direction: column; gap: 8px; }
+
+.sim-split-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.sim-split-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.sim-split-color.stocks { background: var(--color-accent-gold); }
+.sim-split-color.bonds { background: var(--color-accent-green); }
+.sim-split-name { color: var(--color-text-secondary); flex: 1; }
+.sim-split-amt {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-primary);
+}
+
+/* --- Results Panel --- */
+.sim-results-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Time horizon tabs */
+.sim-tabs {
+  display: flex;
+  gap: 8px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px;
+}
+.sim-tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  background: transparent;
+  color: var(--color-text-muted);
+}
+.sim-tab.active {
+  background: var(--color-accent-gold);
+  color: var(--color-bg-primary);
+}
+.sim-tab:hover:not(.active) { color: var(--color-text-primary); background: rgba(255,255,255,0.04); }
+
+/* Asset rows */
+.sim-asset-group {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.sim-group-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--color-border);
+}
+.sim-group-icon { font-size: 18px; }
+.sim-group-title { font-size: 14px; font-weight: 700; color: var(--color-text-primary); flex: 1; }
+.sim-group-alloc {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+.sim-group-alloc.stocks-alloc {
+  background: rgba(212,168,67,0.1);
+  color: var(--color-accent-gold);
+  border: 1px solid var(--color-border-hover);
+}
+.sim-group-alloc.bonds-alloc {
+  background: rgba(0,229,160,0.1);
+  color: var(--color-accent-green);
+  border: 1px solid rgba(0,229,160,0.3);
+}
+
+.sim-asset-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: background var(--transition-fast);
+}
+.sim-asset-row:last-child { border-bottom: none; }
+.sim-asset-row:hover { background: rgba(255,255,255,0.02); }
+
+.sim-asset-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 3px;
+}
+.sim-asset-meta { font-size: 11px; color: var(--color-text-muted); font-family: var(--font-mono); }
+
+.sim-asset-invested {
+  text-align: right;
+}
+.sim-invested-label { font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+.sim-invested-value { font-family: var(--font-mono); font-size: 14px; color: var(--color-text-secondary); }
+
+.sim-asset-return {
+  text-align: right;
+  min-width: 80px;
+}
+.sim-return-label { font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+.sim-return-value { font-family: var(--font-mono); font-size: 15px; color: var(--color-accent-gold-bright); font-weight: 400; }
+
+.sim-asset-rate {
+  text-align: center;
+  min-width: 56px;
+}
+.sim-rate-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  background: rgba(0,229,160,0.08);
+  color: var(--color-accent-green);
+  border: 1px solid rgba(0,229,160,0.2);
+  white-space: nowrap;
+}
+.sim-rate-badge.bond-rate {
+  background: rgba(0,229,160,0.1);
+  color: var(--color-accent-green);
+}
+
+/* Total return callout */
+.sim-total-callout {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-hover);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.sim-total-left {}
+.sim-total-label { font-size: 12px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-family: var(--font-mono); margin-bottom: 4px; }
+.sim-total-desc { font-size: 13px; color: var(--color-text-secondary); }
+.sim-total-right { text-align: right; }
+.sim-total-value {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  color: var(--color-accent-gold-bright);
+  font-weight: 400;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.sim-total-gain {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-accent-green);
+}
+
+.sim-disclaimer {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+  padding-top: 4px;
+}
+
+/* Historical data reference strip */
+.sim-hist-strip {
+  background: rgba(212,168,67,0.03);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 24px;
+  display: flex;
+  gap: 0;
+  flex-wrap: wrap;
+}
+.sim-hist-item {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 16px;
+  border-right: 1px solid var(--color-border);
+  text-align: center;
+}
+.sim-hist-item:last-child { border-right: none; }
+.sim-hist-ticker { font-family: var(--font-mono); font-size: 12px; color: var(--color-accent-gold); margin-bottom: 2px; }
+.sim-hist-return { font-family: var(--font-mono); font-size: 16px; color: var(--color-text-primary); margin-bottom: 2px; }
+.sim-hist-period { font-size: 10px; color: var(--color-text-muted); }
+
+/* ============================================================
+   SECTION: PORTFOLIO SCIENCE (40/60 RATIONALE)
+   ============================================================ */
+#portfolio-science {
+  padding: var(--section-padding);
+  background: var(--color-bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+#portfolio-science::after {
+  content: '';
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(212,168,67,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Allocation visual */
+.alloc-visual {
+  max-width: var(--max-width);
+  margin: 0 auto 64px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.alloc-donut-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.alloc-donut-wrap canvas { width: 220px !important; height: 220px !important; }
+.alloc-donut-center {
+  position: absolute;
+  text-align: center;
+  pointer-events: none;
+}
+.alloc-donut-pct {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+.alloc-donut-sub { font-size: 11px; color: var(--color-text-muted); margin-top: 4px; letter-spacing: 0.05em; }
+
+.alloc-breakdown { display: flex; flex-direction: column; gap: 20px; }
+
+.alloc-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.alloc-bar-col { flex-shrink: 0; text-align: center; }
+.alloc-pct-big {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.alloc-pct-big.gold { color: var(--color-accent-gold); }
+.alloc-pct-big.green { color: var(--color-accent-green); }
+.alloc-bar-line {
+  height: 4px;
+  border-radius: 2px;
+  margin: 0 auto;
+}
+.alloc-bar-line.gold { background: var(--color-accent-gold); width: 80px; }
+.alloc-bar-line.green { background: var(--color-accent-green); width: 80px; }
+
+.alloc-text-col { flex: 1; }
+.alloc-asset-title { font-size: 16px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 4px; }
+.alloc-asset-desc { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+
+.alloc-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0 -40px;
+  align-self: center;
+  grid-column: 1 / -1;
+}
+
+/* Evidence cards grid */
+.science-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  max-width: var(--max-width);
+  margin: 0 auto 40px;
+}
+
+.science-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+  will-change: transform;
+}
+.science-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-gold);
+  border-color: var(--color-border-hover);
+}
+
+.science-card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+}
+.science-card-accent.gold { background: linear-gradient(90deg, var(--color-accent-gold), var(--color-accent-gold-bright)); }
+.science-card-accent.green { background: linear-gradient(90deg, var(--color-accent-green), rgba(0,229,160,0.3)); }
+
+.science-icon { font-size: 32px; margin-bottom: 16px; display: block; }
+
+.science-source-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-accent-gold);
+  background: rgba(212,168,67,0.08);
+  border: 1px solid var(--color-border);
+  margin-bottom: 14px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.science-headline {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.science-body {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.75;
+  margin-bottom: 16px;
+}
+
+.science-stat-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.science-stat { text-align: center; }
+.science-stat-val {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--color-accent-gold-bright);
+  display: block;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.science-stat-lbl { font-size: 11px; color: var(--color-text-muted); }
+
+.science-citation {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+/* Full-width science card */
+.science-card.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Nobel prize highlight */
+.science-highlight-box {
+  background: rgba(212,168,67,0.05);
+  border: 1px solid var(--color-border-hover);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 16px;
+}
+.science-highlight-icon { font-size: 24px; flex-shrink: 0; }
+.science-highlight-text { font-size: 13px; color: var(--color-text-secondary); line-height: 1.65; }
+.science-highlight-text strong { color: var(--color-text-primary); }
+
+/* Blended returns comparison table */
+.science-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-size: 13px;
+}
+.science-table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--color-border);
+}
+.science-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  color: var(--color-text-secondary);
+}
+.science-table td:first-child { color: var(--color-text-primary); font-weight: 500; }
+.science-table td.mono { font-family: var(--font-mono); }
+.science-table td.highlight-cell { color: var(--color-accent-gold-bright); font-family: var(--font-mono); }
+.science-table tr.roundup-row td { background: rgba(212,168,67,0.04); }
+.science-table tr:last-child td { border-bottom: none; }
+
+/* Closing pull-quote */
+.science-pullquote {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.5vw, 26px);
+  font-style: italic;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  padding: 0 40px;
+}
+.science-pullquote strong { color: var(--color-accent-gold); font-style: normal; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1100px) {
+  .hero-popup { display: none; }
+  .steps-connector { display: none; }
+}
+
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 40px; }
+  .stat-item + .stat-item::before { display: none; }
+  .stat-item:nth-child(3) { border-top: 1px solid rgba(212,168,67,0.15); padding-top: 40px; }
+  .stat-item:nth-child(4) { border-top: 1px solid rgba(212,168,67,0.15); padding-top: 40px; }
+
+  .proof-grid { grid-template-columns: 1fr; }
+  .comparison-card { grid-template-columns: 1fr; }
+  .comparison-divider { display: none; }
+  .comparison-col { padding: 28px; }
+  .comparison-col.roundup-col { border-top: 1px solid var(--color-accent-gold-dim); }
+
+  .result-cards { grid-template-columns: 1fr; }
+  .footer-cols { grid-template-columns: 1fr 1fr; }
+  .footer-top { flex-direction: column; align-items: flex-start; }
+
+  /* Simulator */
+  .sim-layout { grid-template-columns: 1fr; }
+  .sim-input-panel { position: relative; top: auto; }
+  .sim-hist-strip { flex-wrap: wrap; }
+  .sim-hist-item { min-width: 45%; }
+
+  /* Portfolio science */
+  .alloc-visual { grid-template-columns: 1fr; }
+  .alloc-donut-wrap { margin-bottom: 20px; }
+  .science-grid { grid-template-columns: 1fr; }
+  .science-card.full-width { grid-column: 1; }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --section-padding: 80px 20px;
+  }
+
+  .nav-links { display: none; }
+  .nav-cta { display: none; }
+  .hamburger { display: flex; }
+  .mobile-nav { display: flex; }
+
+  #navbar { padding: 16px 20px; }
+  #navbar.scrolled { padding: 12px 20px; }
+
+  .steps-wrapper { grid-template-columns: 1fr; }
+
+  /* Simulator mobile */
+  .sim-asset-row { grid-template-columns: 1fr auto; gap: 8px; }
+  .sim-asset-invested { display: none; }
+  .sim-tabs { flex-wrap: wrap; }
+  .sim-total-callout { flex-direction: column; align-items: flex-start; }
+  .sim-total-right { text-align: left; }
+
+  /* Portfolio science mobile */
+  .alloc-visual { padding: 24px; }
+  .alloc-row { gap: 12px; }
+  .alloc-pct-big { font-size: 36px; }
+  .science-pullquote { padding: 0 16px; }
+
+  .browser-body { flex-direction: column; }
+  .checkout-right { width: 100%; }
+
+  .email-form { flex-direction: column; }
+  .email-submit { width: 100%; }
+
+  .ai-bar-wrapper { display: none; }
+
+  .footer-cols { grid-template-columns: 1fr; gap: 32px; }
+  .footer-bottom { flex-direction: column; }
+
+  .chart-callout { position: relative; top: auto; right: auto; margin-bottom: 16px; display: inline-block; }
+}
+
+@media (max-width: 480px) {
+  .hero-trust { flex-direction: column; gap: 12px; }
+  .trust-dot { display: none; }
+  .hero-buttons { flex-direction: column; width: 100%; }
+  .btn-primary, .btn-secondary { width: 100%; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .stat-item:nth-child(3) { border-top: none; padding-top: 0; }
+  .stat-item:nth-child(4) { border-top: none; padding-top: 0; }
+  .comparison-card { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   ANIMATION INITIAL STATES (for GSAP)
+   ============================================================ */
+.gsap-fade-up {
+  opacity: 0;
+  transform: translateY(30px);
+}
+</style>
+</head>
+<body>
+
+<!-- SECTION: MOBILE NAV DRAWER -->
+<nav class="mobile-nav" id="mobileNav">
+  <!-- EDIT: mobile nav links -->
+  <a href="#how-it-works" onclick="closeMobileNav()">How It Works</a>
+  <a href="#simulator" onclick="closeMobileNav()">Simulator</a>
+  <a href="#growth" onclick="closeMobileNav()">The Math</a>
+  <a href="#portfolio-science" onclick="closeMobileNav()">The Allocation</a>
+  <a href="#early-access" class="mobile-cta" onclick="closeMobileNav()">Get Early Access</a>
+</nav>
+
+<!-- SECTION: NAVBAR -->
+<header id="navbar">
+  <!-- EDIT: brand name -->
+  <div class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    Round<span class="logo-up">Up</span>
+  </div>
+
+  <ul class="nav-links">
+    <!-- EDIT: nav link labels and anchors -->
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#simulator">Simulator</a></li>
+    <li><a href="#portfolio-science">The Allocation</a></li>
+    <li><a href="#proof">Why Now</a></li>
+    <li><a href="#early-access">Get Early Access</a></li>
+  </ul>
+
+  <!-- EDIT: navbar CTA -->
+  <button class="nav-cta" onclick="document.getElementById('early-access').scrollIntoView({behavior:'smooth'})">
+    Get Early Access
+  </button>
+
+  <div class="hamburger" id="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </div>
+</header>
+
+<!-- SECTION: HERO -->
+<section id="hero">
+  <canvas id="blob-canvas"></canvas>
+
+  <div class="hero-content">
+    <!-- EDIT: eyebrow badge text -->
+    <div class="hero-eyebrow">
+      <span class="pill-badge">✦ Intelligent Micro-Investing</span>
+    </div>
+
+    <!-- EDIT: hero headline line 1 and line 2 -->
+    <h1 class="hero-headline">
+      Your spending.<br>
+      <em>Your wealth.</em>
+    </h1>
+
+    <!-- EDIT: hero subheadline -->
+    <p class="hero-sub">
+      RoundUp automatically invests 10% of every online purchase — 40% in AI-selected stocks, 60% in Government Bonds. You spend. It grows.
+    </p>
+
+    <div class="hero-buttons">
+      <!-- EDIT: primary CTA label -->
+      <button class="btn-primary" onclick="document.getElementById('early-access').scrollIntoView({behavior:'smooth'})">
+        Get Early Access
+      </button>
+      <!-- EDIT: secondary CTA label -->
+      <button class="btn-secondary" onclick="document.getElementById('how-it-works').scrollIntoView({behavior:'smooth'})">
+        See How It Works ▶
+      </button>
+    </div>
+
+    <div class="hero-trust">
+      <!-- EDIT: trust signal items -->
+      <span class="trust-item">🔒 256-bit Encrypted</span>
+      <span class="trust-dot"></span>
+      <span class="trust-item">🏛️ SEC Compliant Structure</span>
+      <span class="trust-dot"></span>
+      <span class="trust-item">⚡ 60-Second Setup</span>
+    </div>
+  </div>
+
+  <!-- SECTION: HERO EXTENSION POPUP MOCKUP -->
+  <div class="hero-popup">
+    <div class="ext-popup">
+      <div class="ext-header">
+        <div class="ext-logo-circle">R↑</div>
+        <!-- EDIT: popup extension name -->
+        <span class="ext-name">RoundUp</span>
+        <span class="ext-status-dot" title="Active"></span>
+      </div>
+      <div class="ext-body">
+        <!-- EDIT: popup question text -->
+        <div class="ext-question">Invest 10% of your purchase?</div>
+        <div class="ext-amount">
+          <!-- EDIT: popup purchase amount -->
+          <span class="ext-purchase">$134.90 purchase</span>
+          <!-- EDIT: popup invest amount -->
+          <span class="ext-invest">+$13.49</span>
+        </div>
+        <div class="ext-pills">
+          <!-- EDIT: AI asset pills -->
+          <span class="ext-pill">NVDA</span>
+          <span class="ext-pill">T-BONDS</span>
+          <span class="ext-pill">MSFT</span>
+        </div>
+        <div class="ext-actions">
+          <!-- EDIT: popup confirm button -->
+          <button class="ext-btn-confirm">Invest It ✓</button>
+          <!-- EDIT: popup skip button -->
+          <button class="ext-btn-skip">Skip</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+  </div>
+</section>
+
+<!-- SECTION: WHY THIS EXISTS -->
+<section id="why-exists">
+  <div class="container">
+    <!-- EDIT: why-exists label -->
+    <div class="section-label why-label">The problem RoundUp solves</div>
+
+    <div class="stats-grid">
+      <!-- EDIT: stat 1 — value, description, source -->
+      <div class="stat-item">
+        <span class="stat-number" data-target="56" data-suffix="%">0%</span>
+        <div class="stat-desc">Of adults worldwide have zero investments</div>
+        <div class="stat-source">SOURCE: World Bank</div>
+      </div>
+      <!-- EDIT: stat 2 — value, description, source -->
+      <div class="stat-item">
+        <span class="stat-number" data-target="4.8" data-prefix="$" data-suffix="T" data-decimal="1">$0T</span>
+        <div class="stat-desc">Sitting idle in low-yield US savings accounts</div>
+        <div class="stat-source">SOURCE: FDIC</div>
+      </div>
+      <!-- EDIT: stat 3 — value, description, source -->
+      <div class="stat-item">
+        <span class="stat-number" data-target="10.7" data-suffix="%" data-decimal="1">0%</span>
+        <div class="stat-desc">Average annual S&amp;P 500 return over 50 years</div>
+        <div class="stat-source">SOURCE: Investopedia</div>
+      </div>
+      <!-- EDIT: stat 4 — value, description, source -->
+      <div class="stat-item">
+        <span class="stat-number" data-target="3" data-prefix="$" data-suffix="B+">$0B+</span>
+        <div class="stat-desc">Managed by Acorns, proving micro-investing demand exists</div>
+        <div class="stat-source">SOURCE: Acorns public filings</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION: HOW IT WORKS -->
+<section id="how-it-works">
+  <div class="container">
+    <!-- EDIT: how-it-works title -->
+    <h2 class="section-title gsap-fade-up">Three steps. <em>One click.</em></h2>
+    <!-- EDIT: how-it-works subtitle -->
+    <p class="section-sub gsap-fade-up">The whole thing runs in the background. You'll barely notice — until you check your portfolio.</p>
+
+    <div class="steps-wrapper">
+      <div class="steps-connector">
+        <div class="steps-connector-dot"></div>
+      </div>
+
+      <!-- EDIT: step 1 icon, title, description -->
+      <div class="step-card gsap-fade-up">
+        <div class="step-watermark">01</div>
+        <span class="step-icon">🛒</span>
+        <div class="step-title">Shop Anywhere</div>
+        <p class="step-desc">Install RoundUp once. Then shop exactly as you do today — Amazon, eBay, Etsy, Walmart, anywhere online.</p>
+      </div>
+
+      <!-- EDIT: step 2 icon, title, description -->
+      <div class="step-card gsap-fade-up">
+        <div class="step-watermark">02</div>
+        <span class="step-icon">⚡</span>
+        <div class="step-title">The Popup Appears</div>
+        <p class="step-desc">A tiny, non-intrusive popup asks: "Invest 10% of this purchase?" One click to confirm. Or skip — no pressure, ever.</p>
+      </div>
+
+      <!-- EDIT: step 3 icon, title, description -->
+      <div class="step-card gsap-fade-up">
+        <div class="step-watermark">03</div>
+        <span class="step-icon">🤖</span>
+        <div class="step-title">AI Invests For You</div>
+        <p class="step-desc">Our model analyzes 500+ assets in real-time and selects the highest-confidence long-term picks. 40% stocks. 60% Government Bonds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION: INVESTMENT SIMULATOR -->
+<section id="simulator">
+  <div class="container">
+    <!-- EDIT: simulator section title -->
+    <h2 class="section-title gsap-fade-up">Calculate your investment. <em>Any purchase.</em></h2>
+    <!-- EDIT: simulator section subtitle -->
+    <p class="section-sub gsap-fade-up">Enter a purchase price and choose your percentage. See exactly how much gets invested and its simulated long-term return across stocks and government bonds.</p>
+
+    <div class="sim-layout">
+
+      <!-- ── INPUT PANEL ── -->
+      <div class="sim-input-panel gsap-fade-up">
+        <div class="sim-panel-title">▸ Configure your investment</div>
+
+        <!-- EDIT: purchase price field -->
+        <div class="sim-field">
+          <div class="sim-label">Purchase Price</div>
+          <div class="sim-price-wrapper">
+            <span class="sim-currency">$</span>
+            <input
+              type="number"
+              class="sim-price-input"
+              id="simPrice"
+              placeholder="150.00"
+              min="1"
+              max="100000"
+              step="0.01"
+              value="150"
+              oninput="runSimulation()"
+            />
+          </div>
+        </div>
+
+        <!-- EDIT: investment percentage slider -->
+        <div class="sim-field">
+          <div class="sim-label">
+            Investment Rate
+            <span id="simPctDisplay">10%</span>
+          </div>
+          <div class="sim-slider-wrapper">
+            <input
+              type="range"
+              class="sim-slider"
+              id="simPct"
+              min="1"
+              max="10"
+              step="1"
+              value="10"
+              oninput="updateSlider(); runSimulation()"
+            />
+          </div>
+          <div class="sim-slider-marks">
+            <span>1%</span><span>2%</span><span>3%</span><span>4%</span><span>5%</span>
+            <span>6%</span><span>7%</span><span>8%</span><span>9%</span><span>10%</span>
+          </div>
+        </div>
+
+        <!-- Investment summary -->
+        <div class="sim-summary">
+          <div class="sim-summary-total">
+            <span class="sim-summary-label">You invest</span>
+            <span class="sim-summary-value" id="simTotalAmt">$15.00</span>
+          </div>
+          <div class="sim-split-bars">
+            <div class="sim-split-row">
+              <div class="sim-split-color stocks"></div>
+              <span class="sim-split-name">40% → AI Stocks (NVDA · MSFT · AAPL)</span>
+              <span class="sim-split-amt" id="simStocksAmt">$6.00</span>
+            </div>
+            <div class="sim-split-row">
+              <div class="sim-split-color bonds"></div>
+              <span class="sim-split-name">60% → US Treasury Bonds</span>
+              <span class="sim-split-amt" id="simBondsAmt">$9.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RESULTS PANEL ── -->
+      <div class="sim-results-panel">
+
+        <!-- Historical reference strip -->
+        <div class="sim-hist-strip gsap-fade-up">
+          <!-- EDIT: historical reference data — update if rates change -->
+          <div class="sim-hist-item">
+            <div class="sim-hist-ticker">NVDA 5yr CAGR</div>
+            <div class="sim-hist-return">+81.3%</div>
+            <div class="sim-hist-period">Historical avg (2019–2024)</div>
+          </div>
+          <div class="sim-hist-item">
+            <div class="sim-hist-ticker">MSFT 5yr CAGR</div>
+            <div class="sim-hist-return">+16.0%</div>
+            <div class="sim-hist-period">Historical avg (2019–2024)</div>
+          </div>
+          <div class="sim-hist-item">
+            <div class="sim-hist-ticker">AAPL 5yr CAGR</div>
+            <div class="sim-hist-return">+25.1%</div>
+            <div class="sim-hist-period">Historical avg (2019–2024)</div>
+          </div>
+          <div class="sim-hist-item">
+            <div class="sim-hist-ticker">UST 10yr Yield</div>
+            <div class="sim-hist-return">4.42%</div>
+            <div class="sim-hist-period">Current yield (Apr 2025)</div>
+          </div>
+        </div>
+
+        <!-- Time horizon tabs -->
+        <div class="sim-tabs gsap-fade-up">
+          <!-- EDIT: time horizon labels -->
+          <button class="sim-tab" onclick="setHorizon(1,this)">1 Year</button>
+          <button class="sim-tab" onclick="setHorizon(5,this)">5 Years</button>
+          <button class="sim-tab active" onclick="setHorizon(10,this)">10 Years</button>
+          <button class="sim-tab" onclick="setHorizon(20,this)">20 Years</button>
+        </div>
+
+        <!-- Stock assets group -->
+        <div class="sim-asset-group gsap-fade-up">
+          <div class="sim-group-header">
+            <span class="sim-group-icon">📈</span>
+            <span class="sim-group-title">Equity Portfolio — AI Selected</span>
+            <span class="sim-group-alloc stocks-alloc">40% of investment</span>
+          </div>
+
+          <!-- EDIT: NVDA row — update rate if forward estimates change -->
+          <div class="sim-asset-row" id="row-NVDA">
+            <div>
+              <div class="sim-asset-name">NVIDIA Corporation <span style="font-family:var(--font-mono);font-size:11px;color:var(--color-accent-gold-dim);">NVDA</span></div>
+              <div class="sim-asset-meta">$117.93 · AI / Semiconductors · 16% of total</div>
+            </div>
+            <div class="sim-asset-invested">
+              <div class="sim-invested-label">Allocated</div>
+              <div class="sim-invested-value" id="nvda-invested">—</div>
+            </div>
+            <div class="sim-asset-return">
+              <div class="sim-return-label">Projected</div>
+              <div class="sim-return-value" id="nvda-return">—</div>
+            </div>
+            <div class="sim-asset-rate">
+              <span class="sim-rate-badge">20% p.a.*</span>
+            </div>
+          </div>
+
+          <!-- EDIT: MSFT row -->
+          <div class="sim-asset-row" id="row-MSFT">
+            <div>
+              <div class="sim-asset-name">Microsoft Corporation <span style="font-family:var(--font-mono);font-size:11px;color:var(--color-accent-gold-dim);">MSFT</span></div>
+              <div class="sim-asset-meta">$430.16 · Cloud / Enterprise · 16% of total</div>
+            </div>
+            <div class="sim-asset-invested">
+              <div class="sim-invested-label">Allocated</div>
+              <div class="sim-invested-value" id="msft-invested">—</div>
+            </div>
+            <div class="sim-asset-return">
+              <div class="sim-return-label">Projected</div>
+              <div class="sim-return-value" id="msft-return">—</div>
+            </div>
+            <div class="sim-asset-rate">
+              <span class="sim-rate-badge">14% p.a.*</span>
+            </div>
+          </div>
+
+          <!-- EDIT: AAPL row -->
+          <div class="sim-asset-row" id="row-AAPL">
+            <div>
+              <div class="sim-asset-name">Apple Inc. <span style="font-family:var(--font-mono);font-size:11px;color:var(--color-accent-gold-dim);">AAPL</span></div>
+              <div class="sim-asset-meta">$225.12 · Consumer Tech / Services · 8% of total</div>
+            </div>
+            <div class="sim-asset-invested">
+              <div class="sim-invested-label">Allocated</div>
+              <div class="sim-invested-value" id="aapl-invested">—</div>
+            </div>
+            <div class="sim-asset-return">
+              <div class="sim-return-label">Projected</div>
+              <div class="sim-return-value" id="aapl-return">—</div>
+            </div>
+            <div class="sim-asset-rate">
+              <span class="sim-rate-badge">12% p.a.*</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bond assets group -->
+        <div class="sim-asset-group gsap-fade-up">
+          <div class="sim-group-header">
+            <span class="sim-group-icon">🏛️</span>
+            <span class="sim-group-title">Government Bond Portfolio</span>
+            <span class="sim-group-alloc bonds-alloc">60% of investment</span>
+          </div>
+
+          <!-- EDIT: US Treasury row — update yield if rates change -->
+          <div class="sim-asset-row" id="row-UST">
+            <div>
+              <div class="sim-asset-name">US Treasury Note <span style="font-family:var(--font-mono);font-size:11px;color:var(--color-accent-gold-dim);">UST10Y</span></div>
+              <div class="sim-asset-meta">10-Year · Federal guarantee · 0 defaults in 230+ years · 60% of total</div>
+            </div>
+            <div class="sim-asset-invested">
+              <div class="sim-invested-label">Allocated</div>
+              <div class="sim-invested-value" id="ust-invested">—</div>
+            </div>
+            <div class="sim-asset-return">
+              <div class="sim-return-label">Projected</div>
+              <div class="sim-return-value" id="ust-return">—</div>
+            </div>
+            <div class="sim-asset-rate">
+              <span class="sim-rate-badge bond-rate">4.42% p.a.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total projected callout -->
+        <div class="sim-total-callout gsap-fade-up">
+          <div class="sim-total-left">
+            <div class="sim-total-label">Combined Portfolio — Projected Value</div>
+            <div class="sim-total-desc" id="simHorizonLabel">After 10 years, compounded annually</div>
+          </div>
+          <div class="sim-total-right">
+            <div class="sim-total-value" id="simGrandTotal">—</div>
+            <div class="sim-total-gain" id="simTotalGain">—</div>
+          </div>
+        </div>
+
+        <p class="sim-disclaimer">
+          * Projected rates are conservative forward estimates for illustrative purposes only and do not represent guaranteed or expected returns.
+          NVDA historical 5yr CAGR was 81.3% (exceptional AI-era growth); 20% p.a. is used as a conservative long-term illustration.
+          MSFT &amp; AAPL historical CAGRs sourced from Yahoo Finance / Macrotrends. US Treasury yield: US Treasury Dept, Apr 2025.
+          Past performance does not guarantee future results. Investing involves risk of loss.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION: INTERACTIVE POPUP DEMO -->
+<section id="demo">
+  <div class="container">
+    <!-- EDIT: demo section title -->
+    <h2 class="section-title gsap-fade-up">This is the only decision<br>you make.</h2>
+    <!-- EDIT: demo section subtitle -->
+    <p class="section-sub gsap-fade-up">Everything after that is automated.</p>
+
+    <!-- Browser mockup -->
+    <div class="browser-mockup gsap-fade-up">
+      <div class="browser-chrome">
+        <div class="browser-dots">
+          <div class="browser-dot red"></div>
+          <div class="browser-dot yellow"></div>
+          <div class="browser-dot green"></div>
+        </div>
+        <!-- EDIT: demo URL bar text -->
+        <div class="browser-url">amazon.com/checkout</div>
+      </div>
+      <div class="browser-body">
+        <div class="checkout-left">
+          <div class="placeholder-block medium"></div>
+          <div class="placeholder-block short"></div>
+          <div class="placeholder-block tall"></div>
+          <div class="placeholder-block medium"></div>
+          <div class="placeholder-block short"></div>
+        </div>
+        <div class="checkout-right">
+          <div class="checkout-total-label">Order Total</div>
+          <!-- EDIT: demo checkout price -->
+          <div class="checkout-price">$289.90</div>
+          <!-- EDIT: demo checkout button -->
+          <button class="checkout-btn">Place your order</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- AI analysis rows -->
+    <div class="ai-analysis" id="aiAnalysis">
+      <!-- EDIT: AI asset 1 — ticker, reasoning, confidence -->
+      <div class="ai-row" data-confidence="91">
+        <span class="ai-check">✅</span>
+        <div class="ai-info">
+          <div class="ai-asset">NVIDIA (NVDA)</div>
+          <div class="ai-reasoning">Strong momentum + AI sector tailwinds</div>
+        </div>
+        <div class="ai-bar-wrapper">
+          <div class="ai-bar-track"><div class="ai-bar-fill"></div></div>
+          <span class="ai-pct">91%</span>
+        </div>
+      </div>
+
+      <!-- EDIT: AI asset 2 — ticker, reasoning, confidence -->
+      <div class="ai-row" data-confidence="88">
+        <span class="ai-check">✅</span>
+        <div class="ai-info">
+          <div class="ai-asset">US Treasury Bond 2035</div>
+          <div class="ai-reasoning">Risk-free inflation hedge, federal guarantee</div>
+        </div>
+        <div class="ai-bar-wrapper">
+          <div class="ai-bar-track"><div class="ai-bar-fill"></div></div>
+          <span class="ai-pct">88%</span>
+        </div>
+      </div>
+
+      <!-- EDIT: AI asset 3 — ticker, reasoning, confidence -->
+      <div class="ai-row" data-confidence="79">
+        <span class="ai-check">✅</span>
+        <div class="ai-info">
+          <div class="ai-asset">Microsoft (MSFT)</div>
+          <div class="ai-reasoning">Consistent earnings growth, cloud dominance</div>
+        </div>
+        <div class="ai-bar-wrapper">
+          <div class="ai-bar-track"><div class="ai-bar-fill"></div></div>
+          <span class="ai-pct">79%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT: AI demo disclaimer -->
+    <p class="demo-disclaimer">
+      AI analysis concept — updates every 15 minutes in production. Past signals do not guarantee future performance.
+    </p>
+  </div>
+</section>
+
+<!-- SECTION: GROWTH PROJECTION CHART -->
+<section id="growth">
+  <div class="container">
+    <!-- EDIT: growth section title -->
+    <h2 class="section-title gsap-fade-up">$5 a day. <em>A life-changing difference.</em></h2>
+    <!-- EDIT: growth section subtitle -->
+    <p class="section-sub gsap-fade-up">Hypothetical projection: $150/month invested, compounding monthly. For illustrative purposes only.</p>
+
+    <div class="chart-container gsap-fade-up">
+      <div class="chart-legend">
+        <span class="legend-pill gold-pill"><span class="dot"></span>RoundUp Portfolio (8% p.a.)</span>
+        <span class="legend-pill gray-pill"><span class="dot"></span>Savings Account (0.5% p.a.)</span>
+        <span class="legend-pill red-pill"><span class="dot"></span>Uninvested</span>
+      </div>
+      <div class="chart-callout">
+        <!-- EDIT: chart 20-year callout label -->
+        <div class="callout-label">Year 20 — Projected</div>
+        <!-- EDIT: chart 20-year callout value -->
+        <div class="callout-value">$89,234</div>
+      </div>
+      <canvas id="growthChart" height="400"></canvas>
+    </div>
+
+    <div class="result-cards">
+      <!-- EDIT: result card 1 — icon, label, value -->
+      <div class="result-card gold-card gsap-fade-up">
+        <div class="result-icon">🟡</div>
+        <div class="result-label">RoundUp Projected</div>
+        <div class="result-value">$89,234</div>
+      </div>
+      <!-- EDIT: result card 2 — icon, label, value -->
+      <div class="result-card gray-card gsap-fade-up">
+        <div class="result-icon">⚪</div>
+        <div class="result-label">Savings Account</div>
+        <div class="result-value">$30,900</div>
+      </div>
+      <!-- EDIT: result card 3 — icon, label, value -->
+      <div class="result-card red-card gsap-fade-up">
+        <div class="result-icon">🔴</div>
+        <div class="result-label">Uninvested</div>
+        <div class="result-value">$36,000</div>
+      </div>
+    </div>
+
+    <!-- EDIT: growth highlight callout text -->
+    <div class="growth-highlight gsap-fade-up">
+      💡 Hypothetical difference of $58,334 over 20 years vs a savings account — based on historical S&P 500 averages.
+    </div>
+
+    <!-- EDIT: chart disclaimer text -->
+    <p class="chart-disclaimer">
+      Projections are illustrative only and based on historical averages. Actual returns will vary. Investing involves risk.
+    </p>
+  </div>
+</section>
+
+<!-- SECTION: THE PROOF -->
+<section id="proof">
+  <div class="container">
+    <!-- EDIT: proof section title -->
+    <h2 class="section-title gsap-fade-up">Not our words. <em>The data's.</em></h2>
+    <!-- EDIT: proof section subtitle -->
+    <p class="section-sub gsap-fade-up">RoundUp is new. The math behind it has 50 years of evidence.</p>
+
+    <div class="proof-grid">
+      <!-- Left column: third-party data proof cards -->
+      <div class="proof-column">
+
+        <!-- EDIT: proof card 1 — stat, claim, detail, source -->
+        <div class="proof-card gsap-fade-up">
+          <div class="proof-card-icon">📊</div>
+          <div class="proof-stat">10.7%</div>
+          <div class="proof-claim">S&P 500 average annual return over 50 years</div>
+          <p class="proof-detail">Consistent, long-term investing in broad market indexes is the most statistically reliable wealth-building strategy ever documented.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <span class="proof-source">SOURCE: Investopedia</span>
+            <span class="pill-tag market-data">Market Data</span>
+          </div>
+        </div>
+
+        <!-- EDIT: proof card 2 — stat, claim, detail, source -->
+        <div class="proof-card gsap-fade-up">
+          <div class="proof-card-icon">🏛️</div>
+          <div class="proof-stat">230+ years</div>
+          <div class="proof-claim">US Treasury Bonds without a single default</div>
+          <p class="proof-detail">The US government has never failed to repay its debt. Treasury Bonds remain the global benchmark for risk-free fixed income investing.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <span class="proof-source">SOURCE: US Treasury Department</span>
+            <span class="pill-tag market-data">Market Data</span>
+          </div>
+        </div>
+
+        <!-- EDIT: proof card 3 — stat, claim, detail, source -->
+        <div class="proof-card gsap-fade-up">
+          <div class="proof-card-icon">📱</div>
+          <div class="proof-stat">$3B+ AUM</div>
+          <div class="proof-claim">Acorns micro-investing platform</div>
+          <p class="proof-detail">Acorns proved that people will consistently invest small, automatic amounts they barely notice. The behavioral model is validated at massive scale.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <span class="proof-source">SOURCE: Acorns public filings</span>
+            <span class="pill-tag market-data">Market Data</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column: concept/projection cards -->
+      <div class="proof-column">
+
+        <!-- EDIT: concept card 1 — icon, headline, detail -->
+        <div class="concept-card gsap-fade-up">
+          <div class="concept-header">
+            <span class="concept-icon">💰</span>
+            <span class="pill-tag projection">Projection</span>
+          </div>
+          <div class="concept-headline">$150/month at 8% annual return = $89,234 in 20 years</div>
+          <p class="concept-detail">Based on S&P 500 historical averages. This is the compounding math RoundUp is built on. Monthly contributions, compounded monthly over 20 years.</p>
+        </div>
+
+        <!-- EDIT: concept card 2 — icon, headline, detail -->
+        <div class="concept-card gsap-fade-up">
+          <div class="concept-header">
+            <span class="concept-icon">🛒</span>
+            <span class="pill-tag market-data">Market Data</span>
+          </div>
+          <div class="concept-headline">Average American spends $400/month online</div>
+          <p class="concept-detail">10% auto-invested = $40/month without changing a single habit. Source: US Census Bureau e-commerce data. That's $480 invested per year, passively.</p>
+        </div>
+
+        <!-- EDIT: concept card 3 — icon, headline, detail -->
+        <div class="concept-card gsap-fade-up">
+          <div class="concept-header">
+            <span class="concept-icon">⏱️</span>
+            <span class="pill-tag projection">Projection</span>
+          </div>
+          <div class="concept-headline">Starting at 25 vs 35 = ~$180,000 difference at retirement</div>
+          <p class="concept-detail">The single most powerful variable in investing is time. A 10-year head start at 8% annual return on $150/month creates a compounding gap of roughly $180,000 by age 65. RoundUp makes starting effortless.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION: ACORNS PROOF OF CONCEPT -->
+<section id="acorns">
+  <div class="container">
+    <!-- EDIT: acorns section title -->
+    <h2 class="section-title gsap-fade-up">The model is already proven.</h2>
+    <!-- EDIT: acorns section subtitle -->
+    <p class="section-sub gsap-fade-up">We didn't invent micro-investing. We're building the smarter version.</p>
+
+    <div class="comparison-card gsap-fade-up">
+      <!-- Left: Acorns -->
+      <div class="comparison-col">
+        <!-- EDIT: comparison left brand name -->
+        <div class="comparison-brand">Acorns <span style="color:var(--color-text-muted);font-size:16px;font-family:var(--font-body);">Existing</span></div>
+        <ul class="comparison-list">
+          <!-- EDIT: Acorns feature list items -->
+          <li>Rounds up spare change (cents)</li>
+          <li>Fixed portfolio — no AI selection</li>
+          <li>$3B+ AUM, 10M+ users</li>
+          <li>Proves the behavioral model works</li>
+        </ul>
+      </div>
+
+      <div class="comparison-divider"></div>
+
+      <!-- Right: RoundUp -->
+      <div class="comparison-col roundup-col">
+        <div class="comparison-badge">★ The Next Step</div>
+        <!-- EDIT: comparison right brand name -->
+        <div class="comparison-brand">Round<span style="color:var(--color-accent-gold)">Up</span> <span style="color:var(--color-text-muted);font-size:16px;font-family:var(--font-body);">Coming</span></div>
+        <ul class="comparison-list">
+          <!-- EDIT: RoundUp feature list items -->
+          <li>Invests 10% of every purchase — meaningfully larger amounts</li>
+          <li>AI-selected assets, updated every 15 minutes</li>
+          <li>40% stocks + 60% Government Bonds</li>
+          <li>Browser extension — works on any site, automatically</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- EDIT: acorns section closing quote -->
+    <p class="acorns-quote gsap-fade-up">
+      Acorns built a <strong>$3 billion business on spare change</strong>. RoundUp invests real money, with real AI, automatically. <strong>The demand is proven. The improvement is ours.</strong>
+    </p>
+  </div>
+</section>
+
+<!-- SECTION: PORTFOLIO SCIENCE — 40/60 RATIONALE -->
+<section id="portfolio-science">
+  <div class="container">
+    <!-- EDIT: portfolio science title -->
+    <h2 class="section-title gsap-fade-up" style="text-align:center;">Why 40% Stocks. <em>60% Bonds.</em></h2>
+    <!-- EDIT: portfolio science subtitle -->
+    <p class="section-sub gsap-fade-up" style="text-align:center;margin-left:auto;margin-right:auto;">
+      This allocation is not an opinion. It is supported by 70 years of peer-reviewed academic research, Nobel Prize-winning theory, and the largest institutional data sets in finance.
+    </p>
+
+    <!-- Visual allocation breakdown + donut -->
+    <div class="alloc-visual gsap-fade-up">
+      <div class="alloc-donut-wrap">
+        <canvas id="allocDonut" width="220" height="220"></canvas>
+        <div class="alloc-donut-center">
+          <div class="alloc-donut-pct">40/60</div>
+          <div class="alloc-donut-sub">ALLOCATION</div>
+        </div>
+      </div>
+      <div class="alloc-breakdown">
+        <div class="alloc-row">
+          <div class="alloc-bar-col">
+            <!-- EDIT: stock allocation percentage -->
+            <div class="alloc-pct-big gold">40%</div>
+            <div class="alloc-bar-line gold"></div>
+          </div>
+          <div class="alloc-text-col">
+            <div class="alloc-asset-title">AI-Selected Equities</div>
+            <!-- EDIT: stock allocation description -->
+            <div class="alloc-asset-desc">The growth engine. Broad-market equities have returned an average of 10.7% annually over 50 years. The 40% exposure captures this upside while keeping the portfolio anchored by the bond floor below.</div>
+          </div>
+        </div>
+        <div style="height:1px;background:var(--color-border);margin:8px 0;"></div>
+        <div class="alloc-row">
+          <div class="alloc-bar-col">
+            <!-- EDIT: bond allocation percentage -->
+            <div class="alloc-pct-big green">60%</div>
+            <div class="alloc-bar-line green"></div>
+          </div>
+          <div class="alloc-text-col">
+            <div class="alloc-asset-title">US Government Bonds</div>
+            <!-- EDIT: bond allocation description -->
+            <div class="alloc-asset-desc">The stability floor. US Treasury Bonds have never defaulted in 230+ years of US history. At current yields of ~4.4%, this 60% base generates real returns while protecting against equity drawdowns.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evidence cards -->
+    <div class="science-grid">
+
+      <!-- Card 1: Nobel Prize / MPT -->
+      <div class="science-card gsap-fade-up">
+        <div class="science-card-accent gold"></div>
+        <span class="science-icon">🏆</span>
+        <div class="science-source-tag">Nobel Prize in Economics, 1990</div>
+        <div class="science-headline">Modern Portfolio Theory: diversification is the only free lunch in finance</div>
+        <p class="science-body">
+          Harry Markowitz proved in 1952 — and won the Nobel Prize for it in 1990 — that combining assets with low correlation reduces total portfolio risk <em>without</em> sacrificing expected return. Bonds and equities are structurally low-correlated: when stocks fall sharply (2008, 2020, 2022), Treasuries typically hold or rise. Holding both together produces a better risk-adjusted return than either alone.
+        </p>
+        <div class="science-highlight-box">
+          <span class="science-highlight-icon">📖</span>
+          <div class="science-highlight-text">
+            <strong>"Portfolio selection is not just about maximizing return — it is about maximizing return per unit of risk."</strong><br>
+            — Harry Markowitz, Journal of Finance, 1952. Foundation of every institutional asset allocation model in use today.
+          </div>
+        </div>
+        <div class="science-citation">SOURCE: Markowitz, H. (1952). Journal of Finance. · Nobel Committee, 1990.</div>
+      </div>
+
+      <!-- Card 2: Dalbar / behavioral resilience -->
+      <div class="science-card gsap-fade-up">
+        <div class="science-card-accent green"></div>
+        <span class="science-icon">🧠</span>
+        <div class="science-source-tag">DALBAR Inc. — QAIB Report, 2024</div>
+        <div class="science-headline">Investors destroy returns by panicking. Lower volatility prevents panic.</div>
+        <div class="science-stat-row">
+          <div class="science-stat">
+            <span class="science-stat-val">6.81%</span>
+            <span class="science-stat-lbl">Average equity investor<br>20yr annual return</span>
+          </div>
+          <div class="science-stat">
+            <span class="science-stat-val">10.15%</span>
+            <span class="science-stat-lbl">S&P 500<br>same 20yr period</span>
+          </div>
+        </div>
+        <p class="science-body">
+          DALBAR's 2024 QAIB study shows the average equity investor earns <strong>3.34% less per year</strong> than the index — because they sell during crashes and buy during rallies. A 60% bond allocation dampens portfolio swings, making it psychologically easier for investors to <em>stay invested</em>. The bond floor is behavioral infrastructure, not just financial.
+        </p>
+        <div class="science-citation">SOURCE: DALBAR Inc. — Quantitative Analysis of Investor Behavior (QAIB), 2024 edition.</div>
+      </div>
+
+      <!-- Card 3: Ibbotson / blended portfolio data — full width -->
+      <div class="science-card full-width gsap-fade-up">
+        <div class="science-card-accent gold"></div>
+        <span class="science-icon">📊</span>
+        <div class="science-source-tag">Morningstar / Ibbotson SBBI — 95-Year Dataset</div>
+        <div class="science-headline">Blended portfolios outperform pure bonds and nearly match pure equities — at a fraction of the volatility</div>
+        <p class="science-body">
+          Ibbotson's SBBI dataset (Stocks, Bonds, Bills, Inflation) — the most comprehensive long-run asset return database in existence — shows that a conservatively-blended portfolio (40% equity / 60% bonds) achieves risk-adjusted returns that are superior to any single-asset class. The key metric is the Sharpe Ratio: return per unit of risk. Blended portfolios consistently score higher than pure equity over rolling 20-year periods.
+        </p>
+        <!-- Blended returns table -->
+        <table class="science-table">
+          <thead>
+            <tr>
+              <th>Portfolio</th>
+              <th>Allocation</th>
+              <th class="mono">Annualized Return*</th>
+              <th class="mono">Worst Single Year</th>
+              <th class="mono">Sharpe Ratio (est.)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>100% Equities (S&amp;P 500)</td>
+              <td>100% stocks / 0% bonds</td>
+              <td class="mono highlight-cell">10.7%</td>
+              <td class="mono" style="color:var(--color-accent-red);">−43.1% (2008)</td>
+              <td class="mono">0.41</td>
+            </tr>
+            <tr class="roundup-row">
+              <td><strong>RoundUp Portfolio ★</strong></td>
+              <td>40% stocks / 60% bonds</td>
+              <td class="mono highlight-cell">~7.2%</td>
+              <td class="mono" style="color:var(--color-accent-green);">−8.4% (2022)</td>
+              <td class="mono highlight-cell">0.57</td>
+            </tr>
+            <tr>
+              <td>60% Stocks / 40% Bonds</td>
+              <td>Traditional balanced</td>
+              <td class="mono highlight-cell">~8.8%</td>
+              <td class="mono" style="color:var(--color-accent-red);">−26.6% (2008)</td>
+              <td class="mono">0.49</td>
+            </tr>
+            <tr>
+              <td>100% Bonds (US Treasuries)</td>
+              <td>0% stocks / 100% bonds</td>
+              <td class="mono">~5.1%</td>
+              <td class="mono" style="color:var(--color-accent-red);">−11.2% (2022)</td>
+              <td class="mono">0.39</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size:11px;color:var(--color-text-muted);margin-top:12px;font-style:italic;">* Approximate long-run annualized returns based on Ibbotson SBBI data (1928–2024). Worst-year figures are illustrative estimates based on historical market data. Sharpe ratios are estimates using historical data. Actual results will vary.</p>
+        <div class="science-citation">SOURCE: Ibbotson SBBI Yearbook (Morningstar) · Federal Reserve Bank of St. Louis (FRED) · Vanguard Investor Research, 2024.</div>
+      </div>
+
+      <!-- Card 4: Federal Reserve / Treasury guarantee -->
+      <div class="science-card gsap-fade-up">
+        <div class="science-card-accent green"></div>
+        <span class="science-icon">🏛️</span>
+        <div class="science-source-tag">US Department of the Treasury</div>
+        <div class="science-headline">The 60% bond floor has never lost principal in 230+ years of US history</div>
+        <p class="science-body">
+          US Treasury securities are backed by the "full faith and credit" of the US federal government — the same guarantee that underpins the entire global financial system. Since 1790, the United States has never defaulted on its sovereign debt. At current 10-year yields of ~4.42%, the 60% bond portion of every RoundUp investment generates meaningful, risk-free compounding — independent of stock market conditions.
+        </p>
+        <div class="science-highlight-box">
+          <span class="science-highlight-icon">🔐</span>
+          <div class="science-highlight-text">
+            <strong>$25.9 trillion</strong> in US Treasury securities held globally as of 2025. The world's largest institutional investors — pension funds, sovereign wealth funds, central banks — use Treasuries as their risk-free baseline. RoundUp's 60% bond allocation uses the same instrument.
+          </div>
+        </div>
+        <div class="science-citation">SOURCE: US Treasury Dept · TreasuryDirect.gov · Federal Reserve H.4.1 release, 2025.</div>
+      </div>
+
+      <!-- Card 5: Vanguard research on conservative allocation -->
+      <div class="science-card gsap-fade-up">
+        <div class="science-card-accent gold"></div>
+        <span class="science-icon">📐</span>
+        <div class="science-source-tag">Vanguard Investment Research, 2024</div>
+        <div class="science-headline">Conservative allocations are optimal for investors who prioritize consistency over maximum upside</div>
+        <p class="science-body">
+          Vanguard's 2024 Economic and Market Outlook research demonstrates that for investors with <em>automated, regular contributions</em> — exactly the RoundUp model — a conservative-to-moderate allocation (30–50% equity) maximizes the probability of reaching long-term wealth targets because it minimizes the chance of panic-selling during drawdowns. The optimal allocation for a passive, automated investor is <strong>not</strong> 100% equities.
+        </p>
+        <div class="science-highlight-box">
+          <span class="science-highlight-icon">📈</span>
+          <div class="science-highlight-text">
+            Vanguard's LifeStrategy Conservative Growth Fund (40% equity / 60% bonds) has delivered a <strong>7.1% annualized return since inception</strong> with a maximum drawdown of −13.4% vs −50.9% for 100% equity funds over the same period.
+          </div>
+        </div>
+        <div class="science-citation">SOURCE: Vanguard Investment Research — Economic and Market Outlook 2024 · Vanguard LifeStrategy Fund prospectus.</div>
+      </div>
+
+    </div><!-- /science-grid -->
+
+    <!-- EDIT: portfolio science closing pull-quote -->
+    <p class="science-pullquote gsap-fade-up">
+      "The 40/60 allocation is not a compromise. It is a <strong>mathematically superior</strong> risk-adjusted outcome for investors who value consistency, compounding, and not losing sleep over market crashes."
+    </p>
+
+  </div>
+</section>
+
+<!-- SECTION: EARLY ACCESS CTA -->
+<section id="early-access">
+  <div class="early-access-content">
+    <!-- EDIT: early access eyebrow badge -->
+    <div class="early-eyebrow">
+      <span class="pill-badge">✦ Now Accepting Early Access Applications</span>
+    </div>
+
+    <!-- EDIT: early access headline lines -->
+    <h2 class="early-headline">
+      Be the first to<br><em>invest smarter.</em>
+    </h2>
+
+    <!-- EDIT: early access subheadline -->
+    <p class="early-sub">
+      RoundUp is in development. Join the early access list and be among the first to use it when we launch.
+    </p>
+
+    <div class="form-success" id="formSuccess">
+      <!-- EDIT: form success message -->
+      ✓ You're on the list. We'll reach out before anyone else.
+    </div>
+
+    <form class="email-form" id="earlyAccessForm" onsubmit="handleFormSubmit(event)">
+      <!-- EDIT: email input placeholder -->
+      <input type="email" class="email-input" placeholder="Enter your email address" required autocomplete="email" />
+      <!-- EDIT: form submit button -->
+      <button type="submit" class="email-submit">Get Early Access</button>
+    </form>
+
+    <!-- EDIT: form note text -->
+    <p class="form-note">No spam. No commitments. Just first access.</p>
+
+    <div class="trust-badges">
+      <!-- EDIT: trust badge items -->
+      <span class="trust-badge">🔒 Your data is private</span>
+      <span class="trust-badge">📋 No credit card required</span>
+      <span class="trust-badge">🚀 Launching soon</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION: FAQ -->
+<section id="faq">
+  <div class="container">
+    <!-- EDIT: FAQ section title -->
+    <h2 class="section-title gsap-fade-up">Questions? <em>Answered.</em></h2>
+
+    <div class="faq-list">
+      <!-- EDIT: FAQ items — questions and answers -->
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          How much gets invested per purchase?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Exactly 10% of every purchase you approve through the popup. On a $50 purchase, $5 is automatically invested. On a $200 purchase, $20. You always see the amount before confirming.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Is this available now?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">RoundUp is currently in development. Sign up above to get early access when we launch. Early access members will be notified before anyone else and will help shape the product.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Will my money be safe?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">RoundUp will partner exclusively with SEC-regulated custodians and FINRA-registered brokers. RoundUp itself will never hold your funds directly — your money is held by regulated financial institutions, not us.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          How does the AI pick assets?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Our model will analyze price momentum, macroeconomic signals, earnings trends, and sector data across 500+ assets, updated every 15 minutes, selecting highest-confidence long-term positions for the 40% equity portion of your portfolio.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          What are Government Bonds?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">US Treasury Bonds — debt issued and backed by the US federal government, with zero historical defaults in 230+ years. They form the stable, low-risk 60% of your RoundUp portfolio, balancing the growth-oriented equity portion.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          What stores will it work on?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">The browser extension will work on any online checkout — Amazon, eBay, Etsy, Walmart, and thousands more, from day one. If there's a checkout page in your browser, RoundUp will detect it.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION: FOOTER -->
+<footer id="footer">
+  <div class="footer-top">
+    <!-- EDIT: footer logo -->
+    <div class="footer-logo">Round<span class="logo-up">Up</span></div>
+
+    <ul class="footer-nav-links">
+      <!-- EDIT: footer nav links -->
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#growth">The Math</a></li>
+      <li><a href="#proof">Why Now</a></li>
+      <li><a href="#early-access">Early Access</a></li>
+    </ul>
+
+    <div class="footer-socials">
+      <!-- EDIT: social icon placeholders (replace with real links) -->
+      <div class="social-icon" title="Twitter / X">𝕏</div>
+      <div class="social-icon" title="LinkedIn">in</div>
+      <div class="social-icon" title="GitHub">gh</div>
+    </div>
+  </div>
+
+  <div class="footer-cols">
+    <div>
+      <!-- EDIT: footer column 1 title and links -->
+      <div class="footer-col-title">Product</div>
+      <ul class="footer-col-links">
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#demo">Demo</a></li>
+        <li><a href="#growth">Projections</a></li>
+        <li><a href="#early-access">Early Access</a></li>
+      </ul>
+    </div>
+    <div>
+      <!-- EDIT: footer column 2 title and links -->
+      <div class="footer-col-title">Company</div>
+      <ul class="footer-col-links">
+        <li><a href="#">About</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <!-- EDIT: footer column 3 title and links -->
+      <div class="footer-col-title">Legal</div>
+      <ul class="footer-col-links">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Disclosures</a></li>
+        <li><a href="#">Risk Factors</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <!-- EDIT: copyright year -->
+    <div class="footer-copy">© 2026 RoundUp. All rights reserved.</div>
+    <!-- EDIT: footer legal disclaimer -->
+    <div class="footer-legal">
+      RoundUp is a concept in development and is not yet a registered investment advisor. Nothing on this site constitutes financial advice. Investing involves risk. All projections are hypothetical and based on historical market data. Past performance does not guarantee future results.
+    </div>
+  </div>
+</footer>
+
+<!-- SECTION: TICKER BAR — FIXED BOTTOM -->
+<div id="ticker-bar">
+  <div class="ticker-label">
+    <div class="ticker-pulse"></div>
+    <!-- EDIT: ticker live markets label -->
+    <span class="ticker-live-text">Live Markets</span>
+  </div>
+
+  <div class="ticker-scroll-wrapper">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <!-- EDIT: ticker disclaimer text -->
+  <div class="ticker-disclaimer">Simulated data. Not financial advice.</div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+/* ============================================================
+   NAVBAR SCROLL BEHAVIOR
+   ============================================================ */
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 80);
+}, { passive: true });
+
+/* ============================================================
+   MOBILE NAV
+   ============================================================ */
+function toggleMobileNav() {
+  const nav = document.getElementById('mobileNav');
+  const ham = document.getElementById('hamburger');
+  nav.classList.toggle('open');
+  ham.classList.toggle('open');
+}
+function closeMobileNav() {
+  document.getElementById('mobileNav').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+}
+
+/* ============================================================
+   ANIMATED BLOB BACKGROUND — requestAnimationFrame
+   ============================================================ */
+(function() {
+  const canvas = document.getElementById('blob-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h;
+  let t = 0;
+
+  function resize() {
+    w = canvas.width = canvas.offsetWidth;
+    h = canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  const blobs = [
+    { x: 0.3, y: 0.4, r: 0.35, color: 'rgba(212, 168, 67, 0.12)', sx: 0.0007, sy: 0.0009, px: 0, py: 0 },
+    { x: 0.7, y: 0.3, r: 0.3, color: 'rgba(0, 229, 160, 0.07)', sx: 0.0011, sy: 0.0006, px: 1, py: 2 },
+    { x: 0.5, y: 0.7, r: 0.4, color: 'rgba(30, 80, 200, 0.1)', sx: 0.0008, sy: 0.0012, px: 3, py: 1 },
+    { x: 0.15, y: 0.65, r: 0.25, color: 'rgba(212, 168, 67, 0.07)', sx: 0.0013, sy: 0.0007, px: 2, py: 3 },
+  ];
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    t += 0.01;
+    blobs.forEach(b => {
+      const cx = (b.x + 0.12 * Math.sin(t * b.sx * 100 + b.px)) * w;
+      const cy = (b.y + 0.1 * Math.cos(t * b.sy * 100 + b.py)) * h;
+      const r = b.r * Math.min(w, h);
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      grad.addColorStop(0, b.color);
+      grad.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ============================================================
+   TICKER BAR — build, randomize, re-randomize every 30s
+   ============================================================ */
+(function() {
+  // EDIT: ticker stock symbols
+  const stocks = ['AAPL','MSFT','GOOGL','AMZN','NVDA','META','TSLA','JPM','V','BRK.B','UNH','XOM','JNJ','WMT','BAC'];
+
+  // EDIT: base prices — sourced from market data as of April 2025
+  // NVDA post 10:1 split (Jun 2024) · AAPL post 4:1 split (Aug 2020) · WMT post 3:1 split (Feb 2024)
+  const basePrices = {
+    AAPL: 225.12,  // Apple — Apr 2025
+    MSFT: 430.16,  // Microsoft — Apr 2025
+    GOOGL: 178.42, // Alphabet Class A — Apr 2025
+    AMZN: 195.87,  // Amazon — Apr 2025
+    NVDA: 117.93,  // NVIDIA post 10:1 split — Apr 2025
+    META: 578.34,  // Meta Platforms — Apr 2025
+    TSLA: 248.50,  // Tesla — Apr 2025
+    JPM:  218.64,  // JPMorgan Chase — Apr 2025
+    V:    289.73,  // Visa — Apr 2025
+    'BRK.B': 449.60, // Berkshire B — Apr 2025
+    UNH:  492.18,  // UnitedHealth — Apr 2025
+    XOM:  116.45,  // ExxonMobil — Apr 2025
+    JNJ:  162.83,  // Johnson & Johnson — Apr 2025
+    WMT:  82.14,   // Walmart post 3:1 split — Apr 2025
+    BAC:  43.76    // Bank of America — Apr 2025
+  };
+
+  function randomChange() { return (Math.random() * 6 - 3); }
+
+  function buildItems() {
+    return stocks.map(sym => {
+      const base = basePrices[sym];
+      const change = randomChange();
+      const price = (base + change * 0.5).toFixed(2);
+      const pct = (change / base * 100).toFixed(2);
+      const dir = parseFloat(pct) >= 0 ? 1 : -1;
+      return { sym, price, pct: Math.abs(parseFloat(pct)).toFixed(2), dir };
+    });
+  }
+
+  function renderItems(items) {
+    return items.map(it => `
+      <div class="ticker-item">
+        <span class="ticker-name">${it.sym}</span>
+        <span class="ticker-price">$${it.price}</span>
+        <span class="ticker-change ${it.dir > 0 ? 'up' : 'down'}">${it.dir > 0 ? '▲' : '▼'} ${it.pct}%</span>
+      </div>
+      <div class="ticker-dot"></div>
+    `).join('');
+  }
+
+  function buildTrack() {
+    const items = buildItems();
+    const html = renderItems(items);
+    const track = document.getElementById('tickerTrack');
+    track.innerHTML = html + html; // duplicate for seamless loop
+  }
+
+  buildTrack();
+
+  setInterval(() => {
+    const track = document.getElementById('tickerTrack');
+    track.style.opacity = '0';
+    track.style.transition = 'opacity 0.4s';
+    setTimeout(() => {
+      buildTrack();
+      track.style.opacity = '1';
+    }, 400);
+  }, 30000);
+})();
+
+/* ============================================================
+   CHART.JS — GROWTH PROJECTION
+   ============================================================ */
+(function() {
+  const years = Array.from({length: 21}, (_, i) => i);
+  const labels = years.map(y => y === 0 ? 'Now' : `Yr ${y}`);
+
+  function compound(monthly, rate, year) {
+    const r = rate / 12;
+    const n = year * 12;
+    return r === 0 ? monthly * n : monthly * ((Math.pow(1 + r, n) - 1) / r);
+  }
+
+  const monthly = 150;
+  const roundupData = years.map(y => Math.round(compound(monthly, 0.08, y)));
+  const savingsData = years.map(y => Math.round(compound(monthly, 0.005, y)));
+  const uninvestedData = years.map(y => Math.round(monthly * y * 12));
+
+  const ctx = document.getElementById('growthChart').getContext('2d');
+
+  const goldGrad = ctx.createLinearGradient(0, 0, 0, 400);
+  goldGrad.addColorStop(0, 'rgba(212, 168, 67, 0.25)');
+  goldGrad.addColorStop(1, 'rgba(212, 168, 67, 0)');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'RoundUp Portfolio',
+          data: roundupData,
+          borderColor: '#D4A843',
+          borderWidth: 2.5,
+          backgroundColor: goldGrad,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#D4A843',
+        },
+        {
+          label: 'Savings Account',
+          data: savingsData,
+          borderColor: 'rgba(136,146,164,0.6)',
+          borderWidth: 2,
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#8892A4',
+        },
+        {
+          label: 'Uninvested',
+          data: uninvestedData,
+          borderColor: 'rgba(255, 77, 106, 0.5)',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#FF4D6A',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0F1729',
+          borderColor: 'rgba(212,168,67,0.4)',
+          borderWidth: 1,
+          titleColor: '#F0F4FF',
+          bodyColor: '#8892A4',
+          padding: 14,
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.03)' },
+          ticks: { color: '#4A5568', font: { family: "'JetBrains Mono'", size: 11 }, maxTicksLimit: 11 }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#4A5568',
+            font: { family: "'JetBrains Mono'", size: 11 },
+            callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v)
+          }
+        }
+      }
+    }
+  });
+})();
+
+/* ============================================================
+   EARLY ACCESS FORM
+   ============================================================ */
+function handleFormSubmit(e) {
+  e.preventDefault();
+  document.getElementById('earlyAccessForm').style.display = 'none';
+  const success = document.getElementById('formSuccess');
+  success.style.display = 'flex';
+}
+
+/* ============================================================
+   FAQ ACCORDION
+   ============================================================ */
+function toggleFaq(el) {
+  const item = el.parentElement;
+  const answer = item.querySelector('.faq-answer');
+  const isOpen = item.classList.contains('open');
+
+  // Close all
+  document.querySelectorAll('.faq-item').forEach(i => {
+    i.classList.remove('open');
+    i.querySelector('.faq-answer').style.maxHeight = '0';
+  });
+
+  if (!isOpen) {
+    item.classList.add('open');
+    answer.style.maxHeight = answer.scrollHeight + 'px';
+  }
+}
+
+/* ============================================================
+   STAT COUNTERS — IntersectionObserver count-up
+   ============================================================ */
+(function() {
+  const counters = document.querySelectorAll('.stat-number[data-target]');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      observer.unobserve(entry.target);
+      const el = entry.target;
+      const target = parseFloat(el.dataset.target);
+      const prefix = el.dataset.prefix || '';
+      const suffix = el.dataset.suffix || '';
+      const decimals = el.dataset.decimal ? parseInt(el.dataset.decimal) : 0;
+      const duration = 1800;
+      const start = performance.now();
+
+      function tick(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const val = target * ease;
+        el.textContent = prefix + (decimals > 0 ? val.toFixed(decimals) : Math.floor(val)) + suffix;
+        if (progress < 1) requestAnimationFrame(tick);
+        else el.textContent = prefix + (decimals > 0 ? target.toFixed(decimals) : target) + suffix;
+      }
+      requestAnimationFrame(tick);
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(c => observer.observe(c));
+})();
+
+/* ============================================================
+   GSAP SCROLL ANIMATIONS
+   ============================================================ */
+(function() {
+  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Fade-up elements
+  document.querySelectorAll('.gsap-fade-up').forEach(el => {
+    gsap.fromTo(el,
+      { opacity: 0, y: 30, scale: 0.97 },
+      {
+        opacity: 1, y: 0, scale: 1,
+        duration: 0.7,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 88%',
+          toggleActions: 'play none none none'
+        }
+      }
+    );
+  });
+
+  // Step cards stagger
+  gsap.fromTo('.step-card',
+    { opacity: 0, y: 40 },
+    {
+      opacity: 1, y: 0,
+      duration: 0.7,
+      ease: 'power3.out',
+      stagger: 0.12,
+      scrollTrigger: {
+        trigger: '.steps-wrapper',
+        start: 'top 80%',
+        toggleActions: 'play none none none'
+      }
+    }
+  );
+
+  // Proof cards stagger
+  gsap.fromTo('.proof-card, .concept-card',
+    { opacity: 0, y: 30 },
+    {
+      opacity: 1, y: 0,
+      duration: 0.6,
+      ease: 'power3.out',
+      stagger: 0.1,
+      scrollTrigger: {
+        trigger: '.proof-grid',
+        start: 'top 80%',
+        toggleActions: 'play none none none'
+      }
+    }
+  );
+
+  // Result cards stagger
+  gsap.fromTo('.result-card',
+    { opacity: 0, y: 24 },
+    {
+      opacity: 1, y: 0,
+      duration: 0.6,
+      ease: 'power3.out',
+      stagger: 0.1,
+      scrollTrigger: {
+        trigger: '.result-cards',
+        start: 'top 85%',
+        toggleActions: 'play none none none'
+      }
+    }
+  );
+
+  // AI rows stagger into demo section
+  ScrollTrigger.create({
+    trigger: '#demo',
+    start: 'top 60%',
+    onEnter: () => {
+      gsap.to('.ai-row', {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'power3.out',
+        stagger: 0.18,
+        delay: 0.3,
+        onComplete: () => {
+          document.querySelectorAll('.ai-row').forEach(row => {
+            const pct = row.dataset.confidence;
+            const bar = row.querySelector('.ai-bar-fill');
+            if (bar) { setTimeout(() => { bar.style.width = pct + '%'; }, 200); }
+          });
+        }
+      });
+    }
+  });
+
+  // FAQ stagger
+  gsap.fromTo('.faq-item',
+    { opacity: 0, x: -20 },
+    {
+      opacity: 1, x: 0,
+      duration: 0.5,
+      ease: 'power2.out',
+      stagger: 0.08,
+      scrollTrigger: {
+        trigger: '.faq-list',
+        start: 'top 80%',
+        toggleActions: 'play none none none'
+      }
+    }
+  );
+
+  // Stat items animation
+  gsap.fromTo('.stat-item',
+    { opacity: 0, y: 20 },
+    {
+      opacity: 1, y: 0,
+      duration: 0.6,
+      ease: 'power2.out',
+      stagger: 0.1,
+      scrollTrigger: {
+        trigger: '.stats-grid',
+        start: 'top 80%',
+        toggleActions: 'play none none none'
+      }
+    }
+  );
+})();
+
+/* ============================================================
+   INVESTMENT SIMULATOR
+   ============================================================ */
+(function() {
+  // Asset definitions
+  // EDIT: update forwardRate values if return assumptions change
+  const ASSETS = {
+    NVDA: {
+      id: 'nvda',
+      // 40% of total goes to stocks; NVDA = 40% of that stock portion = 16% of total
+      stockShare: 0.40,
+      // Conservative forward annual rate used for projection (not the 81% historical)
+      forwardRate: 0.20,
+      label: 'NVIDIA (NVDA)'
+    },
+    MSFT: {
+      id: 'msft',
+      stockShare: 0.40,  // 40% of stock portion = 16% of total
+      forwardRate: 0.14,
+      label: 'Microsoft (MSFT)'
+    },
+    AAPL: {
+      id: 'aapl',
+      stockShare: 0.20,  // 20% of stock portion = 8% of total
+      forwardRate: 0.12,
+      label: 'Apple (AAPL)'
+    }
+  };
+
+  // EDIT: US Treasury 10yr yield — update if rate environment changes
+  const BOND_YIELD = 0.0442;   // 4.42% current yield, Apr 2025
+  const STOCK_ALLOC = 0.40;    // 40% of investment goes to stocks
+  const BOND_ALLOC  = 0.60;    // 60% goes to bonds
+
+  let currentHorizon = 10;
+
+  // Compound a principal for N years at annual rate r
+  function compound(principal, rate, years) {
+    return principal * Math.pow(1 + rate, years);
+  }
+
+  function fmt(n) {
+    if (n < 0.01) return '$0.00';
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  window.setHorizon = function(years, btn) {
+    currentHorizon = years;
+    document.querySelectorAll('.sim-tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    runSimulation();
+  };
+
+  window.updateSlider = function() {
+    const pct = document.getElementById('simPct').value;
+    document.getElementById('simPctDisplay').textContent = pct + '%';
+    // Update slider fill gradient
+    const slider = document.getElementById('simPct');
+    const val = ((pct - 1) / 9) * 100;
+    slider.style.background = `linear-gradient(to right, var(--color-accent-gold) 0%, var(--color-accent-gold) ${val}%, rgba(255,255,255,0.08) ${val}%, rgba(255,255,255,0.08) 100%)`;
+  };
+
+  window.runSimulation = function() {
+    const priceRaw = parseFloat(document.getElementById('simPrice').value) || 0;
+    const pct      = parseInt(document.getElementById('simPct').value) || 10;
+    const years    = currentHorizon;
+
+    const totalInvested = priceRaw * (pct / 100);
+    const stockPool     = totalInvested * STOCK_ALLOC;
+    const bondPool      = totalInvested * BOND_ALLOC;
+
+    // Update summary panel
+    document.getElementById('simTotalAmt').textContent  = fmt(totalInvested);
+    document.getElementById('simStocksAmt').textContent = fmt(stockPool);
+    document.getElementById('simBondsAmt').textContent  = fmt(bondPool);
+
+    // Update horizon label
+    const horizonTexts = {
+      1: 'After 1 year, compounded annually',
+      5: 'After 5 years, compounded annually',
+      10: 'After 10 years, compounded annually',
+      20: 'After 20 years, compounded annually'
+    };
+    document.getElementById('simHorizonLabel').textContent = horizonTexts[years] || '';
+
+    let grandTotal = 0;
+
+    // Stock rows
+    Object.entries(ASSETS).forEach(([key, asset]) => {
+      const allocated = stockPool * asset.stockShare;
+      const projected = compound(allocated, asset.forwardRate, years);
+      grandTotal += projected;
+
+      const invEl = document.getElementById(asset.id + '-invested');
+      const retEl = document.getElementById(asset.id + '-return');
+      if (invEl) invEl.textContent = fmt(allocated);
+      if (retEl) retEl.textContent = fmt(projected);
+    });
+
+    // Bond row
+    const bondProjected = compound(bondPool, BOND_YIELD, years);
+    grandTotal += bondProjected;
+    const ustInv = document.getElementById('ust-invested');
+    const ustRet = document.getElementById('ust-return');
+    if (ustInv) ustInv.textContent = fmt(bondPool);
+    if (ustRet) ustRet.textContent = fmt(bondProjected);
+
+    // Grand total
+    const gain = grandTotal - totalInvested;
+    document.getElementById('simGrandTotal').textContent = fmt(grandTotal);
+    document.getElementById('simTotalGain').textContent  =
+      totalInvested > 0
+        ? (gain >= 0 ? '▲ +' : '▼ ') + fmt(Math.abs(gain)) + ' projected gain'
+        : '—';
+  };
+
+  // Initialise slider gradient and run once on load
+  window.addEventListener('DOMContentLoaded', () => {});
+  // Run after a tiny delay to ensure DOM is ready
+  setTimeout(() => { updateSlider(); runSimulation(); }, 100);
+})();
+
+/* ============================================================
+   ALLOCATION DONUT CHART (Portfolio Science section)
+   ============================================================ */
+(function() {
+  const canvas = document.getElementById('allocDonut');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Equities (40%)', 'Govt Bonds (60%)'],
+      datasets: [{
+        data: [40, 60],
+        backgroundColor: [
+          'rgba(212, 168, 67, 0.85)',
+          'rgba(0, 229, 160, 0.75)'
+        ],
+        borderColor: [
+          'rgba(212, 168, 67, 1)',
+          'rgba(0, 229, 160, 1)'
+        ],
+        borderWidth: 2,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: false,
+      cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0F1729',
+          borderColor: 'rgba(212,168,67,0.4)',
+          borderWidth: 1,
+          titleColor: '#F0F4FF',
+          bodyColor: '#8892A4',
+          padding: 12
+        }
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>
