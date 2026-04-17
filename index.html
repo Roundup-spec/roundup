@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>RoundUp — Intelligent Micro-Investing</title>
-<meta name="description" content="RoundUp automatically invests 10% of every online purchase. You spend. It grows." />
+<meta name="description" content="RoundUp automatically invests 1–10% of every online purchase into a managed fund. You spend. It grows. Withdraw anytime." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
@@ -1688,6 +1688,311 @@ canvas#growthChart { width: 100% !important; }
 }
 
 /* ============================================================
+   SECTION: HOW YOUR MONEY WORKS (Fund + Withdrawal)
+   ============================================================ */
+#fund-structure {
+  padding: var(--section-padding);
+  background: var(--color-bg-secondary);
+}
+
+.fund-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: var(--max-width);
+  margin: 0 auto 40px;
+}
+
+/* Full-width flow diagram card */
+.fund-flow-card {
+  grid-column: 1 / -1;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+}
+
+.fund-flow-title {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent-gold);
+  margin-bottom: 32px;
+}
+
+/* Flow steps row */
+.fund-flow-steps {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.fund-flow-step {
+  flex: 1;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+/* Arrow between steps */
+.fund-flow-step + .fund-flow-step::before {
+  content: '→';
+  position: absolute;
+  left: -18px;
+  top: 28px;
+  font-size: 20px;
+  color: var(--color-accent-gold-dim);
+}
+
+.fund-step-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(212, 168, 67, 0.08);
+  border: 1px solid var(--color-border-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.fund-step-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+
+.fund-step-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  max-width: 140px;
+  margin: 0 auto;
+}
+
+/* Feature cards */
+.fund-feature-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+  will-change: transform;
+}
+.fund-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-gold);
+  border-color: var(--color-border-hover);
+}
+
+.fund-feature-card.highlight-card {
+  border-color: var(--color-border-hover);
+  background: linear-gradient(135deg, rgba(212,168,67,0.04) 0%, var(--color-bg-card) 100%);
+}
+
+.fund-feature-icon { font-size: 36px; margin-bottom: 18px; display: block; }
+
+.fund-feature-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.fund-feature-body {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.75;
+  margin-bottom: 18px;
+}
+
+.fund-feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fund-feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.fund-feature-list li::before {
+  content: '✦';
+  color: var(--color-accent-gold);
+  flex-shrink: 0;
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+/* Withdrawal timeline strip */
+.withdraw-timeline {
+  grid-column: 1 / -1;
+  background: rgba(0, 229, 160, 0.04);
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 32px 40px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.withdraw-timeline-label {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent-green);
+  margin-right: 32px;
+  flex-shrink: 0;
+  font-weight: 400;
+}
+
+.withdraw-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.withdraw-step + .withdraw-step::before {
+  content: '→';
+  color: var(--color-accent-green);
+  opacity: 0.4;
+  font-size: 16px;
+  margin-right: 12px;
+}
+
+.withdraw-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 229, 160, 0.12);
+  border: 1px solid rgba(0, 229, 160, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-accent-green);
+  flex-shrink: 0;
+}
+
+.withdraw-text {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+.withdraw-text strong { color: var(--color-text-primary); display: block; font-size: 13px; }
+
+/* Rate selector showcase */
+.rate-showcase {
+  grid-column: 1 / -1;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 40px;
+  align-items: center;
+}
+
+.rate-showcase-left {}
+.rate-showcase-label {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent-gold);
+  margin-bottom: 12px;
+}
+.rate-showcase-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+.rate-showcase-desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  max-width: 520px;
+}
+
+.rate-bubbles {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.rate-bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  transition: all var(--transition-fast);
+  cursor: default;
+}
+.rate-bubble:hover,
+.rate-bubble.active-bubble {
+  border-color: var(--color-accent-gold);
+  background: rgba(212,168,67,0.08);
+  color: var(--color-accent-gold);
+  transform: scale(1.12);
+}
+.rate-bubble.active-bubble {
+  width: 64px;
+  height: 64px;
+  font-size: 15px;
+  box-shadow: 0 0 20px rgba(212,168,67,0.25);
+}
+
+/* Responsive fund section */
+@media (max-width: 900px) {
+  .fund-grid { grid-template-columns: 1fr; }
+  .fund-flow-card { grid-column: 1; }
+  .withdraw-timeline { grid-column: 1; }
+  .rate-showcase { grid-column: 1; grid-template-columns: 1fr; }
+  .fund-flow-step + .fund-flow-step::before { display: none; }
+  .fund-flow-steps { gap: 24px; }
+}
+@media (max-width: 600px) {
+  .fund-flow-card { padding: 24px; }
+  .rate-showcase { padding: 24px; }
+  .withdraw-timeline { padding: 24px; flex-direction: column; align-items: flex-start; gap: 20px; }
+  .withdraw-timeline-label { margin-right: 0; margin-bottom: 8px; }
+}
+
+/* ============================================================
    SECTION: INVESTMENT SIMULATOR
    ============================================================ */
 #simulator {
@@ -2422,8 +2727,8 @@ canvas#growthChart { width: 100% !important; }
 <nav class="mobile-nav" id="mobileNav">
   <!-- EDIT: mobile nav links -->
   <a href="#how-it-works" onclick="closeMobileNav()">How It Works</a>
+  <a href="#fund-structure" onclick="closeMobileNav()">Your Fund</a>
   <a href="#simulator" onclick="closeMobileNav()">Simulator</a>
-  <a href="#growth" onclick="closeMobileNav()">The Math</a>
   <a href="#portfolio-science" onclick="closeMobileNav()">The Allocation</a>
   <a href="#early-access" class="mobile-cta" onclick="closeMobileNav()">Get Early Access</a>
 </nav>
@@ -2438,9 +2743,9 @@ canvas#growthChart { width: 100% !important; }
   <ul class="nav-links">
     <!-- EDIT: nav link labels and anchors -->
     <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#fund-structure">Your Fund</a></li>
     <li><a href="#simulator">Simulator</a></li>
     <li><a href="#portfolio-science">The Allocation</a></li>
-    <li><a href="#proof">Why Now</a></li>
     <li><a href="#early-access">Get Early Access</a></li>
   </ul>
 
@@ -2472,7 +2777,7 @@ canvas#growthChart { width: 100% !important; }
 
     <!-- EDIT: hero subheadline -->
     <p class="hero-sub">
-      RoundUp automatically invests 10% of every online purchase — 40% in AI-selected stocks, 60% in Government Bonds. You spend. It grows.
+      RoundUp automatically invests between 1% and 10% of every online purchase — 40% in AI-selected stocks, 60% in Government Bonds. You choose the rate. You withdraw anytime.
     </p>
 
     <div class="hero-buttons">
@@ -2507,7 +2812,7 @@ canvas#growthChart { width: 100% !important; }
       </div>
       <div class="ext-body">
         <!-- EDIT: popup question text -->
-        <div class="ext-question">Invest 10% of your purchase?</div>
+        <div class="ext-question">Invest <strong style="color:var(--color-accent-gold)">10%</strong> of your purchase?</div>
         <div class="ext-amount">
           <!-- EDIT: popup purchase amount -->
           <span class="ext-purchase">$134.90 purchase</span>
@@ -2598,7 +2903,7 @@ canvas#growthChart { width: 100% !important; }
         <div class="step-watermark">02</div>
         <span class="step-icon">⚡</span>
         <div class="step-title">The Popup Appears</div>
-        <p class="step-desc">A tiny, non-intrusive popup asks: "Invest 10% of this purchase?" One click to confirm. Or skip — no pressure, ever.</p>
+        <p class="step-desc">A tiny, non-intrusive popup asks: "Invest [your chosen %] of this purchase?" One click to confirm. Or skip — no pressure, ever. You set the rate between 1% and 10%.</p>
       </div>
 
       <!-- EDIT: step 3 icon, title, description -->
@@ -2609,6 +2914,165 @@ canvas#growthChart { width: 100% !important; }
         <p class="step-desc">Our model analyzes 500+ assets in real-time and selects the highest-confidence long-term picks. 40% stocks. 60% Government Bonds.</p>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- SECTION: HOW YOUR MONEY WORKS -->
+<section id="fund-structure">
+  <div class="container">
+    <!-- EDIT: fund section title -->
+    <h2 class="section-title gsap-fade-up">Your money goes into <em>a fund.</em></h2>
+    <!-- EDIT: fund section subtitle -->
+    <p class="section-sub gsap-fade-up">Every investment RoundUp makes on your behalf goes into a managed fund — automatically allocated, professionally structured, and available for withdrawal whenever you want.</p>
+
+    <div class="fund-grid">
+
+      <!-- ── MONEY FLOW DIAGRAM ── -->
+      <div class="fund-flow-card gsap-fade-up">
+        <div class="fund-flow-title">▸ How your money moves</div>
+        <div class="fund-flow-steps">
+
+          <!-- EDIT: fund flow step 1 -->
+          <div class="fund-flow-step">
+            <div class="fund-step-icon">🛒</div>
+            <div class="fund-step-label">You check out</div>
+            <div class="fund-step-desc">Buy anything online. RoundUp detects the purchase total.</div>
+          </div>
+
+          <!-- EDIT: fund flow step 2 -->
+          <div class="fund-flow-step">
+            <div class="fund-step-icon">⚡</div>
+            <div class="fund-step-label">You confirm</div>
+            <div class="fund-step-desc">One click in the popup. Your chosen % is queued to invest.</div>
+          </div>
+
+          <!-- EDIT: fund flow step 3 -->
+          <div class="fund-flow-step">
+            <div class="fund-step-icon">🏦</div>
+            <div class="fund-step-label">Goes to the fund</div>
+            <div class="fund-step-desc">The amount is routed to your RoundUp managed fund — held by a regulated custodian, not RoundUp.</div>
+          </div>
+
+          <!-- EDIT: fund flow step 4 -->
+          <div class="fund-flow-step">
+            <div class="fund-step-icon">🤖</div>
+            <div class="fund-step-label">AI allocates it</div>
+            <div class="fund-step-desc">40% goes to AI-selected equities. 60% to US Treasury Bonds. Automatically.</div>
+          </div>
+
+          <!-- EDIT: fund flow step 5 -->
+          <div class="fund-flow-step">
+            <div class="fund-step-icon">📈</div>
+            <div class="fund-step-label">It compounds</div>
+            <div class="fund-step-desc">Your portfolio grows over time. Check it anytime in the RoundUp dashboard.</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── FUND STRUCTURE CARD ── -->
+      <div class="fund-feature-card highlight-card gsap-fade-up">
+        <span class="fund-feature-icon">🏛️</span>
+        <!-- EDIT: fund structure card title -->
+        <div class="fund-feature-title">Managed fund structure. Not a savings account.</div>
+        <!-- EDIT: fund structure card body -->
+        <p class="fund-feature-body">Your money does not sit idle. It is pooled into a managed investment fund allocated exactly according to RoundUp's 40/60 model — giving you institutional-grade diversification on amounts as small as a dollar.</p>
+        <ul class="fund-feature-list">
+          <!-- EDIT: fund structure bullet points -->
+          <li>Held by an SEC-regulated custodian — never by RoundUp directly</li>
+          <li>Fund positions rebalanced automatically as markets move</li>
+          <li>All transactions recorded and visible in your dashboard</li>
+          <li>SIPC-eligible protection on brokerage assets up to $500,000</li>
+        </ul>
+      </div>
+
+      <!-- ── WITHDRAWAL CARD ── -->
+      <div class="fund-feature-card gsap-fade-up">
+        <span class="fund-feature-icon">💸</span>
+        <!-- EDIT: withdrawal card title -->
+        <div class="fund-feature-title">Your money. Withdraw whenever you want.</div>
+        <!-- EDIT: withdrawal card body -->
+        <p class="fund-feature-body">There are no lock-up periods, no penalties, and no minimum holding time. This is your money and you are free to take it out at any point. Withdrawals are processed within standard brokerage settlement windows.</p>
+        <ul class="fund-feature-list">
+          <!-- EDIT: withdrawal bullet points -->
+          <li>Withdraw your full balance or any partial amount</li>
+          <li>Funds transferred to your linked bank account</li>
+          <li>Standard T+1 settlement for equity positions</li>
+          <li>No withdrawal fees. No questions asked.</li>
+        </ul>
+      </div>
+
+      <!-- ── WITHDRAWAL PROCESS TIMELINE ── -->
+      <div class="withdraw-timeline gsap-fade-up">
+        <span class="withdraw-timeline-label">Withdrawal Process</span>
+
+        <!-- EDIT: withdrawal timeline steps -->
+        <div class="withdraw-step">
+          <div class="withdraw-num">1</div>
+          <div class="withdraw-text">
+            <strong>Request</strong>
+            Tap "Withdraw" in the RoundUp app
+          </div>
+        </div>
+
+        <div class="withdraw-step">
+          <div class="withdraw-num">2</div>
+          <div class="withdraw-text">
+            <strong>Sell order placed</strong>
+            Fund positions liquidated at market price
+          </div>
+        </div>
+
+        <div class="withdraw-step">
+          <div class="withdraw-num">3</div>
+          <div class="withdraw-text">
+            <strong>Settlement</strong>
+            T+1 for equities — next business day
+          </div>
+        </div>
+
+        <div class="withdraw-step">
+          <div class="withdraw-num">4</div>
+          <div class="withdraw-text">
+            <strong>In your bank</strong>
+            Funds arrive via ACH transfer, 1–3 days
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RATE SELECTOR SHOWCASE ── -->
+      <div class="rate-showcase gsap-fade-up">
+        <div class="rate-showcase-left">
+          <div class="rate-showcase-label">▸ Your investment rate</div>
+          <!-- EDIT: rate showcase title -->
+          <div class="rate-showcase-title">You choose between 1% and 10%.<br>Change it anytime.</div>
+          <!-- EDIT: rate showcase description -->
+          <p class="rate-showcase-desc">
+            RoundUp never forces a fixed rate on you. Set it to 1% if you want to start small and barely feel it. Ramp up to 10% when you're ready to invest more aggressively. Change the rate at any time from your dashboard — it takes effect on the next purchase.
+          </p>
+        </div>
+        <div class="rate-bubbles">
+          <!-- EDIT: rate bubble values (1–10%) -->
+          <div class="rate-bubble">1%</div>
+          <div class="rate-bubble">2%</div>
+          <div class="rate-bubble">3%</div>
+          <div class="rate-bubble">4%</div>
+          <div class="rate-bubble">5%</div>
+          <div class="rate-bubble">6%</div>
+          <div class="rate-bubble">7%</div>
+          <div class="rate-bubble">8%</div>
+          <div class="rate-bubble">9%</div>
+          <div class="rate-bubble active-bubble">10%</div>
+        </div>
+      </div>
+
+    </div><!-- /fund-grid -->
+
+    <!-- Disclaimer -->
+    <p style="text-align:center;font-size:11px;color:var(--color-text-muted);font-style:italic;max-width:700px;margin:0 auto;">
+      Fund structure, custodian relationships, and SIPC coverage are subject to final regulatory approval and partner agreements prior to launch. Withdrawal timelines reflect standard industry settlement periods and may vary.
+    </p>
+
   </div>
 </section>
 
@@ -3056,7 +3520,7 @@ canvas#growthChart { width: 100% !important; }
             <span class="pill-tag market-data">Market Data</span>
           </div>
           <div class="concept-headline">Average American spends $400/month online</div>
-          <p class="concept-detail">10% auto-invested = $40/month without changing a single habit. Source: US Census Bureau e-commerce data. That's $480 invested per year, passively.</p>
+          <p class="concept-detail">At just 5–10% auto-invested, that's $20–$40/month without changing a single habit. Source: US Census Bureau e-commerce data. Even at a conservative 5%, that's $240 invested per year, passively.</p>
         </div>
 
         <!-- EDIT: concept card 3 — icon, headline, detail -->
@@ -3104,7 +3568,7 @@ canvas#growthChart { width: 100% !important; }
         <div class="comparison-brand">Round<span style="color:var(--color-accent-gold)">Up</span> <span style="color:var(--color-text-muted);font-size:16px;font-family:var(--font-body);">Coming</span></div>
         <ul class="comparison-list">
           <!-- EDIT: RoundUp feature list items -->
-          <li>Invests 10% of every purchase — meaningfully larger amounts</li>
+          <li>Invests 1–10% of every purchase (you choose) — meaningfully larger amounts</li>
           <li>AI-selected assets, updated every 15 minutes</li>
           <li>40% stocks + 60% Government Bonds</li>
           <li>Browser extension — works on any site, automatically</li>
@@ -3368,7 +3832,7 @@ canvas#growthChart { width: 100% !important; }
           <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
         <div class="faq-answer">
-          <div class="faq-answer-inner">Exactly 10% of every purchase you approve through the popup. On a $50 purchase, $5 is automatically invested. On a $200 purchase, $20. You always see the amount before confirming.</div>
+          <div class="faq-answer-inner">Between 1% and 10% — whichever rate you set in your RoundUp preferences. You can change it at any time. On a $50 purchase at 5%, $2.50 is invested. At 10%, $5.00. You always see the exact amount in the popup before you confirm.</div>
         </div>
       </div>
 
@@ -3409,6 +3873,27 @@ canvas#growthChart { width: 100% !important; }
         </div>
         <div class="faq-answer">
           <div class="faq-answer-inner">US Treasury Bonds — debt issued and backed by the US federal government, with zero historical defaults in 230+ years. They form the stable, low-risk 60% of your RoundUp portfolio, balancing the growth-oriented equity portion.</div>
+        </div>
+      </div>
+
+      <!-- EDIT: FAQ — fund and withdrawal -->
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Where exactly does my money go, and can I take it out?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Your investment goes into a managed fund held by an SEC-regulated custodian — not RoundUp. The fund is automatically allocated 40% to AI-selected equities and 60% to US Treasury Bonds. You can withdraw your full balance or any partial amount at any time with no penalties. Withdrawals follow standard brokerage settlement: equity positions settle in T+1 (next business day), and funds arrive in your linked bank account within 1–3 business days via ACH transfer.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Can I change my investment rate after I set it?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Yes — anytime. You can change your investment rate (between 1% and 10%) from the RoundUp dashboard at any time. The new rate takes effect on your very next purchase. Want to dial it back to 1% for a tight month? Done in seconds. Ready to invest more? Slide it up to 10%. There is no lock-in.</div>
         </div>
       </div>
 

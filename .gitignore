@@ -10,3 +10,4 @@ desktop.ini
 
 # Claude local settings (keep launch.json but not local overrides)
 .claude/settings.local.json
+.claude/worktrees/
